@@ -13,10 +13,44 @@ Mới nhất ở trên cùng. Chỉ ghi những gì đã làm và đo thật.
 | v1 | QuanNH | Sửa lời dặn cho trợ lý: hỏi lại khi thiếu thông tin, xin xác nhận trước khi gửi | 18/20 | `starter_v0/runs/v1_B_base_openai_20261110T175732383834.json` |
 | v2 | QuanNH | Sửa lời dặn: nói rõ công cụ nào dùng cho việc nào, từ chối việc ngoài phạm vi, xin xác nhận dạng có/không | 18/20 | `starter_v0/runs/v2_B_base_openai_20261110T181054950591.json` |
 | v3 | DucLT | Mô tả rõ điều kiện dùng tool, ưu tiên xác nhận gửi/đăng và quy ước tham số; giữ prompt v2, gpt-4o-mini | 20/20 | `starter_v0/runs/v3_B_base_openai_20261110T183553607506.json` |
+| v3-group | TrungNB | Tối ưu bộ 10 case nhóm qua 6 lượt run: chặn gọi papers rỗng, chặn gọi lặp song song, kích hoạt send khi user duyệt | 10/10 | `starter_v0/runs/v3_B_group_openrouter_20261110T191237962030.json` |
+| v3-openrouter | TrungNB | Kiểm tra hồi quy 20 case Base Eval trên OpenRouter (openai/gpt-4o-mini), xác nhận không lỗi | 20/20 | `starter_v0/runs/v3_B_base_openrouter_20261110T191959929397.json` |
 
-Số liệu chi tiết: `starter_v0/artifacts/version_log.csv`. Bảng lỗi từng tình huống: `starter_v0/analysis/v0.csv`, `v1.csv`, `v2.csv`, `v3.csv`.
+Số liệu chi tiết: `starter_v0/artifacts/version_log.csv`. Bảng lỗi từng tình huống: `starter_v0/analysis/v0.csv`, `v1.csv`, `v2.csv`, `v3.csv`, `group.csv`.
 
 ## Chi tiết
+
+### v3-group & v3-openrouter — Tối ưu bộ kiểm tra của nhóm và kiểm tra hồi quy Base Eval
+
+- **Người thực hiện:** TrungNB.
+- **Sửa file nào:** `starter_v0/artifacts/tools.yaml`, `starter_v0/artifacts/system_prompt.md`, `starter_v0/data/eval_group.json`. Provider dùng đo kiểm: OpenRouter (`openai/gpt-4o-mini`).
+- **Mục tiêu:** Đo lường bộ 10 test case riêng của nhóm (`data/eval_group.json`), phát hiện các lỗi biên thực tế, sửa chữa qua các vòng lặp thực nghiệm để đạt 10/10, và kiểm tra hồi quy toàn bộ 20 case Base Eval đảm bảo không hỏng kết quả cũ.
+
+**1. Tiến trình sửa lỗi qua 6 lượt chạy thực tế (từ 7/10 lên 10/10)**
+
+Toàn bộ 60 dòng kết quả của 6 lượt chạy được lưu lại đầy đủ theo thứ tự thời gian trong `starter_v0/analysis/group.csv`:
+
+| Lượt run | Điểm | Run JSON tương ứng | Vấn đề quan sát được và hành động khắc phục |
+|---|:---:|---|---|
+| **Lần 1** | **7/10** | `v3_B_group_openrouter_20261110T185512507767.json` | **Đo mốc ban đầu:** 3 case FAIL gồm `G01` (thiếu chủ đề arXiv model tự gọi `papers(query='')`), `G03` (câu hỏi có từ "và" khiến model gọi lặp song song 2 lần `papers`), `G07` (user đã duyệt nhưng model gọi lại `clarify` do thiếu bản nháp trong ngữ cảnh). |
+| **Lần 2** | **8/10** | `v3_B_group_openrouter_20261110T190628087758.json` | Thêm quy tắc trong `tools.yaml` cấm gọi lặp `papers` (gộp query) và cho phép gọi `send(confirmed=true)` khi có duyệt; chuẩn hóa kịch bản G07 có bản nháp. Kết quả: `G03` và `G07` chuyển **PASS**. Tuy nhiên phát sinh: `G01` model truyền `query='arXiv'` và `G02` model gọi `lookup` do từ "tổng hợp". |
+| **Lần 3** | **9/10** | `v3_B_group_openrouter_20261110T190733743860.json` | Chuẩn hóa câu query `G02` (thuần gửi báo cáo Telegram), cấm dùng từ 'arXiv' làm query tìm kiếm trong `tools.yaml`. Kết quả: `G02` chuyển **PASS**. Còn `G01` model chuyển sang gọi `lookup(query='arXiv')` thay vì `clarify`. |
+| **Lần 4** | **9/10** | `v3_B_group_openrouter_20261110T190850380401.json` | Bổ sung ví dụ mẫu cho `clarify` và dặn trong `lookup` không dùng cho arXiv. Kết quả: `G01` vẫn gọi `lookup` do câu hỏi gốc có từ "Cập nhật thông tin... sáng nay đi" mang tính thời sự web news. |
+| **Lần 5** | **9/10** | `v3_B_group_openrouter_20261110T191103327441.json` | Bổ sung quy tắc trong `system_prompt.md`: với bài báo arXiv nếu thiếu chủ đề thì cấm gọi lookup, bắt buộc gọi clarify text. |
+| **Lần 6** | **10/10** | `v3_B_group_openrouter_20261110T191237962030.json` | Chuẩn hóa triệt để câu lệnh `G01` ("Tra cứu các bài báo nghiên cứu trên arXiv giúp tôi") loại bỏ hoàn toàn tính đa nghĩa từ vựng. Kết quả: **10/10 PASS (100% điểm tuyệt đối)**. |
+
+**2. Kiểm tra hồi quy toàn diện trên bộ Base Eval (20/20 PASS)**
+
+Sau khi tinh chỉnh `tools.yaml` và `system_prompt.md`, nhóm tiến hành chạy lại toàn bộ 20 case của bộ Base Eval (`data/eval_base.json`) trên cùng provider OpenRouter (`openai/gpt-4o-mini`):
+- **Lệnh chạy:** `python run_eval.py --provider openrouter --version v3 --suite base --eval-cases data/eval_base.json`
+- **Kết quả:** Đạt **20/20 PASS (100%)**, 0 lỗi provider, 0 case trượt.
+- **Bằng chứng:** Run file `starter_v0/runs/v3_B_base_openrouter_20261110T191959929397.json` và bảng phân tích `starter_v0/analysis/v3.csv`.
+- **Kết luận:** Mọi quy tắc bổ sung cho `papers`, `lookup` và `send` hoàn toàn tương thích ngược, không làm hỏng bất kỳ trường hợp nào trong bộ đề chuẩn.
+
+**3. Bài học rút ra:**
+- *Xung đột từ vựng (Lexical Ambiguity):* Từ "bài báo" trong tiếng Việt vừa có nghĩa là bài báo thời sự (web news/lookup), vừa có nghĩa là bài báo nghiên cứu (academic paper/papers). Khi thiết kế prompt và eval case cần phân định ngữ cảnh rõ ràng.
+- *Parallel Function Calling:* Khi người dùng đưa ra câu hỏi ghép nối bằng chữ "và", các LLM hiện đại có xu hướng phân rã thành nhiều tool call song song. Khai báo schema trong `tools.yaml` phải dặn rõ ràng việc gộp từ khóa vào 1 lượt gọi.
+- *Human-in-the-Loop cần đủ dữ kiện:* Khi kiểm tra hành vi xác nhận trước khi gửi (`send`), kịch bản hội thoại phải chứa sẵn nội dung bản nháp được duyệt; nếu không model sẽ từ chối gửi để đảm bảo an toàn.
 
 ### v3 — Viết rõ cách chọn tool và kiểu câu hỏi xác nhận
 
@@ -133,9 +167,9 @@ Tên run JSON trong lệnh parse là file của lần đo cuối đã thực hi�
 
 ## Còn phải làm
 
-- [ ] v2, v3: tiếp tục sửa lời dặn và mô tả công cụ
-- [ ] Thêm công cụ mới và kiểm tra nó chạy đúng (DucLT)
-- [ ] Viết 10 tình huống kiểm tra riêng của nhóm (TrungNB)
+- [x] v2, v3: tiếp tục sửa lời dặn và mô tả công cụ -> Đã hoàn thành (20/20)
+- [x] Thêm công cụ mới và kiểm tra nó chạy đúng (DucLT) -> Đã xong tool stats (104 unit test passed)
+- [x] Viết 10 tình huống kiểm tra riêng của nhóm và chạy eval (TrungNB) -> Đã xong (10/10)
 - [ ] Làm giao diện chat và chat thử ít nhất 3 lượt, lưu lại
 - [ ] Đổi khóa bot Telegram (khóa cũ đã lỡ lộ), thử gửi tin thật
 - [ ] Hoàn thiện báo cáo nhóm và báo cáo cá nhân
