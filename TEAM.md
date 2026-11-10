@@ -11,8 +11,8 @@
 
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
-|   1 | Nguyễn Văn Hải Quân | 2A202603994 | 26ai.quannvh@vinuni.edu.vn | haiquanng | Lead / Developer |
-|   2 | Lại Trọng Đức | 2A202604019 | laitrongduc@vinuni.edu.vn | laitrongduc | Developer |
+|   1 | Nguyễn Văn Hải Quân | 2A202603994 | 26ai.quannvh@vinuni.edu.vn | haiquanng | Developer |
+|   2 | Lại Trọng Đức | 2A202604019 | | laitrongduc | Developer |
 |   3 | Nguyễn Bảo Trung | 2A202604013 | nbtrungrhm@gmail.com | trungnb | Developer |
 
 ## Cá nhân
@@ -25,45 +25,7 @@ report/team/MSSV_HoTen.md
 
 Ví dụ: `report/team/2A202604013_NguyenBaoTrung.md`.
 
-## Nguyễn Văn Hải Quân - 2A202603994
-
-### Phần việc phụ trách
-
-- Lead nhóm, quản lý repository, thiết lập pipeline và điều phối merge PR.
-- Xây dựng giao diện web (`web/`, Next.js, shadcn/ui) và API backend (`starter_v0/server.py`, FastAPI).
-- Tích hợp bot tương tác hai chiều qua Telegram (`starter_v0/telegram_bot.py`).
-- Đóng gói và triển khai phiên bản web lên Vercel: `https://research-agent-ban5.vercel.app`.
-
-### Đóng góp cụ thể
-
-- Triển khai server FastAPI hỗ trợ Server-Sent Events (SSE) để truyền trực tiếp tiến trình suy luận và gọi tool của agent theo thời gian thực lên giao diện web.
-- Tích hợp chức năng chọn version (v0, v1, v2, v3) ngay trên web UI mà không cần can thiệp code (`artifacts/versions/`).
-- Triển khai cơ chế xác nhận duyệt tin trước khi gửi (`ask / confirm`) trên web và qua các nút bấm tương tác Inline Keyboard trên Telegram.
-
-### Bằng chứng
-
-- File và commit: `starter_v0/server.py`, `starter_v0/telegram_bot.py`, thư mục `web/`, commit `9bdc927`, `596bf37`, `60e9dd2`.
-- Báo cáo cá nhân chi tiết: `report/team/2A202603994_NguyenVanHaiQuan.md`.
-
-## Lại Trọng Đức - 2A202604019
-
-### Phần việc phụ trách
-
-- Phát triển công cụ mới `stats` (`starter_v0/tools/stats/`) phục vụ thống kê mô tả.
-- Xây dựng tài liệu đặc tả `TOOL.md` và đăng ký tool trong `tools/__init__.py` và `artifacts/tools.yaml`.
-- Viết 17 hàm unit test trong `starter_v0/tests/test_tools_todo.py`, xóa bỏ toàn bộ `pytest.skip` (đạt 0 skipped).
-- Phối hợp tối ưu định nghĩa mô tả tool trong `tools.yaml` cho các vòng lặp v1-v3.
-
-### Đóng góp cụ thể
-
-- Hoàn thiện tool `stats` chuẩn Python stdlib (`statistics`), hỗ trợ `mean`, `median`, `stdev`, xử lý lỗi an toàn không gây crash agent.
-- Mở rộng parametrization test suite lên 37 test cases, mock HTTP sạch sẽ, bao phủ toàn bộ các trường hợp biên của 10 công cụ trong hệ thống.
-- Chạy kiểm thử tự động đạt 104/104 test passed (0 failed, 0 skipped), ghi nhận log tại `starter_v0/analysis/duclt_pytest.txt`.
-
-### Bằng chứng
-
-- File và commit: `starter_v0/tools/stats/tool.py`, `starter_v0/tools/stats/TOOL.md`, `starter_v0/tests/test_tools_todo.py`, `starter_v0/analysis/duclt_pytest.txt`, branch `feat/DucLT-tool-tests` (commit `0d4b517`, `b788f27`, `0e8ce8f`).
-- Báo cáo cá nhân chi tiết: `report/team/2A202604019_LaiTrongDuc.md`.
+Sao chép mục dưới đây cho từng thành viên.
 
 ## Nguyễn Bảo Trung - 2A202604013
 

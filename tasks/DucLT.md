@@ -39,8 +39,9 @@
 - [ ] Dùng `scripts/parse_runs.py` tổng hợp metric v0→v3 (pass rate theo version, theo loại case), gửi bảng cho TrungNB ghi vào báo cáo
 - [x] Bonus pytest: 0 failed, 0 skipped — xem `starter_v0/analysis/duclt_pytest.txt`.
 - [ ] Bonus Ollama: `ollama pull qwen2.5:7b` và `llama3.2:3b`, preflight `--provider ollama`, ≥ 2 model và ≥ 2 vòng tối ưu local
-- [x] Có ít nhất 1 commit kỹ thuật trong lịch sử nhánh nộp
-- [x] Báo cáo cá nhân `report/team/MSSV_HoTen.md` (`report/team/2A202604019_LaiTrongDuc.md`)
+- [ ] Có ít nhất 1 commit kỹ thuật trong lịch sử nhánh nộp
+- [ ] Nộp link repo trên LMS bằng tài khoản cá nhân trước 23h59
+- [ ] Báo cáo cá nhân `report/team/MSSV_HoTen.md`
 
 ## Việc đang làm
 -
