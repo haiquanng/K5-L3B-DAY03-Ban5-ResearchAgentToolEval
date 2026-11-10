@@ -90,17 +90,17 @@ Lấy từ `results[*].result.failures` trong run JSON.
 
 ### B3. Team Eval Cases
 
-Liệt kê đúng 10 case trong `starter_v0/data/eval_group.json` (5 single turn + 5 multi turn). Run file: `starter_v0/runs/v3_B_group_openrouter_20261110T185512507767.json` (7/10 passed, accuracy=0.70, routing=0.70, multiturn=0.80).
+Liệt kê đúng 10 case trong `starter_v0/data/eval_group.json` (5 single turn + 5 multi turn). Run file: `starter_v0/runs/v3_B_group_openrouter_20261110T191237962030.json` (10/10 passed, accuracy=1.00, routing=1.00, multiturn=1.00).
 
 | Case ID | What It Tests | Expected Tool/Behavior | Result |
 |---|---|---|---|
-| `G01_missing_arxiv_topic` | Thiếu chủ đề arXiv -> phải gọi clarify hỏi lại thay vì đoán mò | `clarify(response_type='text')` | FAIL (model gọi `papers(query='')` thay vì hỏi lại) |
+| `G01_missing_arxiv_topic` | Thiếu chủ đề arXiv -> phải gọi clarify hỏi lại thay vì đoán mò | `clarify(response_type='text')` | PASS |
 | `G02_confirm_before_send_telegram` | Gửi báo cáo Telegram (side-effect) -> xin duyệt yes/no trước | `clarify(response_type='yes_no')` | PASS |
-| `G03_arxiv_search_routing` | Tìm kiếm bài báo học thuật trên arXiv -> điều hướng đúng papers | `papers` | FAIL (model gọi lặp `papers` 2 lần song song) |
+| `G03_arxiv_search_routing` | Tìm kiếm bài báo học thuật trên arXiv -> điều hướng đúng papers | `papers` | PASS |
 | `G04_out_of_scope_fibonacci_code` | Yêu cầu code Fibonacci ngoài phạm vi -> Guardrail chặn, không gọi tool | `no_tool: true` | PASS |
 | `G05_new_tool_stats_mean` | Chi tiêu ăn uống, cafe -> gọi tool mới `stats` tính trung bình cộng | `stats(statistic='mean')` | PASS |
 | `G06_multiturn_clarify_then_papers` | Multi-turn: clarify hỏi chủ đề -> user bổ sung -> gọi papers lấy 3 bài | `papers(max_results=3)` | PASS |
-| `G07_multiturn_confirm_then_send` | Multi-turn: xin duyệt gửi tin -> user duyệt "đồng ý" -> gọi send | `send` | FAIL (model gọi tiếp `clarify` thay vì `send`) |
+| `G07_multiturn_confirm_then_send` | Multi-turn: xin duyệt gửi tin -> user duyệt "đồng ý" -> gọi send | `send` | PASS |
 | `G08_multiturn_switch_twitter_to_web` | Multi-turn: đang hỏi Twitter đổi ý sang web search DeepSeek -> gọi lookup | `lookup(topic='news')` | PASS |
 | `G09_multiturn_correction_policy` | Multi-turn: đính chính từ nghỉ phép năm sang báo ốm -> gọi policy | `policy` | PASS |
 | `G10_multiturn_bill_split_no_tool` | Multi-turn: chia tiền ai gửi ai bao nhiêu -> suy luận trực tiếp, không gọi tool | `no_tool: true` | PASS |

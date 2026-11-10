@@ -16,7 +16,7 @@
 tools:
   # ---------------- Core tools ----------------
   - name: clarify
-    description: "Ask the user one question, then wait. Choose response_type by intent in this order: (1) UNCONFIRMED SEND/POST/PUBLISH intent -> yes_no. This branch has priority even when the message body is missing: first ask whether the user confirms the intention to publish after providing/reviewing the final text. Never classify that initial publishing request as a text question about missing content. This is only intent confirmation, not permission to send unknown text. (2) Missing account, URL or topic in a read/search request -> text. (3) Explicit alternatives -> choice with options. Do not ask for information already supplied in context. Examples: 'Gửi bản tóm tắt qua Telegram' without a draft -> clarify(question='Bạn xác nhận muốn gửi qua Telegram sau khi cung cấp và duyệt nội dung cuối chứ?', response_type='yes_no'); 'Đọc bài viết đó' without a URL -> clarify(question='Bạn cung cấp URL cần đọc nhé?', response_type='text'). Only send after exact final text is available and explicitly approved; an initial publishing request alone is not approval."
+    description: "Ask the user one question, then wait. Choose response_type by intent in this order: (1) UNCONFIRMED SEND/POST/PUBLISH intent -> yes_no. This branch has priority even when the message body is missing: first ask whether the user confirms the intention to publish after providing/reviewing the final text. Never classify that initial publishing request as a text question about missing content. This is only intent confirmation, not permission to send unknown text. Do not call clarify if the user has already confirmed or explicitly agreed to send (e.g. 'đồng ý gửi', 'xác nhận gửi', 'gửi ngay nhé'); call send instead. (2) Missing account, URL or research topic in a read/search request -> text. (3) Explicit alternatives -> choice with options. Do not ask for information already supplied in context. Examples: 'Gửi bản tóm tắt qua Telegram' without a draft -> clarify(question='Bạn xác nhận muốn gửi qua Telegram sau khi cung cấp và duyệt nội dung cuối chứ?', response_type='yes_no'); 'Đọc bài viết đó' without a URL -> clarify(question='Bạn cung cấp URL cần đọc nhé?', response_type='text'); 'Tìm bài báo mới trên arXiv' without a topic -> clarify(question='Bạn muốn tìm bài báo về chủ đề hoặc lĩnh vực nào trên arXiv?', response_type='text'). Only send after exact final text is available and explicitly approved; an initial publishing request alone is not approval."
     parameters:
       type: object
       properties:
@@ -45,7 +45,7 @@ tools:
       required: [query]
 
   - name: lookup
-    description: "Tìm thông tin và tin tức trên web bằng Tavily. Dùng khi người dùng muốn tin web hoặc chuyển từ Twitter sang tin tức; giữ chủ đề/thời gian từ ngữ cảnh nếu chưa bị thay đổi. Không dùng thay timeline/social_search cho yêu cầu chỉ lấy bài mạng xã hội, hoặc thay fetch khi đã có URL cần đọc. query chỉ chứa chủ đề ngắn, không tự thêm news/tin tức; topic=news cho thời sự, general cho thông tin chung; chọn timeframe theo yêu cầu."
+    description: "Tìm thông tin và tin tức trên web bằng Tavily. Dùng khi người dùng muốn tin web hoặc chuyển từ Twitter sang tin tức; giữ chủ đề/thời gian từ ngữ cảnh nếu chưa bị thay đổi. Không dùng thay timeline/social_search cho yêu cầu chỉ lấy bài mạng xã hội, không dùng cho bài báo khoa học/arXiv (dùng papers/paper_text), hoặc thay fetch khi đã có URL cần đọc. Khi thiếu chủ đề cho bài báo arXiv thì phải hỏi clarify text, không gọi lookup. query chỉ chứa chủ đề ngắn, không tự thêm news/tin tức; topic=news cho thời sự, general cho thông tin chung; chọn timeframe theo yêu cầu."
     parameters:
       type: object
       properties:
@@ -86,7 +86,7 @@ tools:
 
   # ---------------- Bonus tools ----------------
   - name: send
-    description: "Gửi đúng nội dung text đã được xác nhận vào Telegram channel của nhóm. CHỈ dùng sau khi người dùng xác nhận rõ nội dung cuối trong cuộc hội thoại hiện tại; confirmed=true chỉ khi có xác nhận đó. Yêu cầu gửi/đăng ban đầu chưa phải xác nhận: gọi clarify với response_type=yes_no trước, kể cả thiếu nội dung; sau đó phải có đủ text và xác nhận nội dung trước khi gửi. Không dùng cho câu ngoài phạm vi research, bản nháp, khi bị hủy gửi hoặc chưa có xác nhận; không gọi send để xin xác nhận."
+    description: "Gửi đúng nội dung text đã được xác nhận vào Telegram channel của nhóm. CHỈ dùng sau khi người dùng xác nhận rõ nội dung cuối trong cuộc hội thoại hiện tại; confirmed=true chỉ khi có xác nhận đó. Yêu cầu gửi/đăng ban đầu chưa phải xác nhận: gọi clarify với response_type=yes_no trước, kể cả thiếu nội dung; sau đó phải có đủ text và xác nhận nội dung trước khi gửi. Khi người dùng đã xác nhận đồng ý gửi trong hội thoại (ví dụ 'đồng ý gửi', 'xác nhận gửi', 'gửi ngay nhé'), HÃY GỌI send(confirmed=true) để thực thi gửi tin. Không dùng cho câu ngoài phạm vi research, bản nháp, khi bị hủy gửi hoặc chưa có xác nhận; không gọi send để xin xác nhận."
     parameters:
       type: object
       properties:
@@ -105,11 +105,11 @@ tools:
       required: [query]
 
   - name: papers
-    description: "Tìm paper/preprint trên arXiv theo chủ đề, trả metadata và link. Dùng khi cần khám phá tài liệu học thuật. Không dùng cho tin web hoặc tweet; nếu đã có arXiv ID/URL và cần đọc nội dung, dùng paper_text. query là chủ đề hoặc cú pháp tìm kiếm arXiv; sort_by và max_results điều khiển danh sách."
+    description: "Tìm paper/preprint trên arXiv theo chủ đề khoa học cụ thể, trả metadata và link. Bắt buộc người dùng phải cung cấp chủ đề hoặc lĩnh vực nghiên cứu cụ thể (ví dụ AI, NLP, robot); từ 'arXiv' chỉ là tên kho lưu trữ, TUYỆT ĐỐI KHÔNG dùng từ 'arXiv' làm query tìm kiếm. Nếu người dùng không nêu rõ chủ đề nghiên cứu học thuật (ví dụ chỉ nói 'tìm vài bài báo mới nhất trên arXiv'), TUYỆT ĐỐI KHÔNG gọi papers mà BẮT BUỘC phải gọi clarify(response_type='text') để hỏi người dùng cần tìm bài báo về chủ đề gì. Chỉ gọi papers đúng 1 lần cho mỗi lượt yêu cầu, nếu có nhiều từ khóa hãy gộp chung vào một query, không gọi lặp song song nhiều lần. Không dùng cho tin web hoặc tweet; nếu đã có arXiv ID/URL và cần đọc nội dung, dùng paper_text."
     parameters:
       type: object
       properties:
-        query: {type: string, default: "", description: "Chủ đề học thuật hoặc cú pháp arXiv như ti:agent; không dùng URL paper làm chủ đề tìm kiếm."}
+        query: {type: string, default: "", description: "Chủ đề nghiên cứu học thuật cụ thể (ví dụ LLM, agents); tuyệt đối không dùng từ 'arXiv' làm chủ đề. Nếu thiếu chủ đề nghiên cứu thì bắt buộc gọi clarify."}
         max_results: {type: integer, default: 5, description: "Số nguyên từ 1 đến 10, mặc định 5; implementation giới hạn tối đa 10."}
         sort_by: {type: string, enum: [relevance, lastUpdatedDate, submittedDate], default: "relevance", description: "relevance=liên quan; submittedDate=mới nộp; lastUpdatedDate=mới cập nhật. Mặc định relevance."}
       required: [query]

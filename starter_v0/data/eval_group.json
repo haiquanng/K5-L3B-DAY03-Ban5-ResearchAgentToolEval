@@ -15,7 +15,7 @@
       "id": "G01_missing_arxiv_topic",
       "phase": "B",
       "suite": "group",
-      "query": "Cập nhật thông tin bài báo trên arXiv sáng nay đi",
+      "query": "Tra cứu các bài báo nghiên cứu trên arXiv giúp tôi",
       "failure_type": "missing_info",
       "expect": {
         "tool_calls": [
@@ -37,7 +37,7 @@
       "id": "G02_confirm_before_send_telegram",
       "phase": "B",
       "suite": "group",
-      "query": "Tổng hợp vấn đề tuần này và gửi báo cáo lên Telegram đi",
+      "query": "Gửi bản báo cáo tổng hợp tuần này lên Telegram giúp mình",
       "failure_type": "wrong_boundary",
       "expect": {
         "tool_calls": [
@@ -59,7 +59,7 @@
       "id": "G03_arxiv_search_routing",
       "phase": "B",
       "suite": "group",
-      "query": "Tìm xem trên arXiv tuần này có bài báo nào mới về AI Agents và build AI Agents",
+      "query": "Tìm xem trên arXiv tuần này có bài báo học thuật nào mới về chủ đề AI Agents",
       "failure_type": "wrong_tool",
       "expect": {
         "tool_calls": [
@@ -155,11 +155,11 @@
       "turns": [
         {
           "role": "user",
-          "content": "Gửi tóm tắt tin tức AI hôm nay vào channel Telegram"
+          "content": "Chuẩn bị gửi bản tin tóm tắt: 'Tin AI hôm nay: Mô hình mới đạt kỷ lục hiệu năng' lên channel Telegram giúp mình"
         },
         {
           "role": "user",
-          "content": "Nội dung rất ổn, đồng ý gửi lên Telegram ngay nhé"
+          "content": "Nội dung bản tin đó rất ổn, đồng ý gửi lên Telegram ngay nhé"
         }
       ],
       "failure_type": "wrong_boundary",
