@@ -212,6 +212,18 @@ Tên run JSON trong lệnh parse là file của lần đo cuối đã thực hi�
 - **Phát hiện kèm theo:** bản v3 xử lý đúng câu "Đăng bản tin này lên Telegram giúp mình" nhưng lệch với cách nói khác như "Đưa tin này lên Telegram giúp tôi" (agent hỏi bằng chữ thường, không dùng công cụ hỏi lại). Điểm 20/20 của v3 phụ thuộc vào câu chữ của từng tình huống.
 - **Việc tiếp theo:** đề xuất v4 liệt kê đủ các cách nói gửi/đăng/đưa và nêu nguyên văn nội dung khi xin xác nhận.
 
+### Thử với model local (Ollama): llama3.2:3b và qwen2.5:7b (bonus)
+
+- **Làm gì:** chạy bộ base 20 tình huống trên hai model nhỏ ở máy cá nhân, qua Ollama, rồi tối ưu ba vòng. Toàn bộ run hợp lệ (0 lỗi, đo đủ 20/20).
+- **Baseline với prompt v6 dài:** `llama3.2:3b` đạt 2/20, `qwen2.5:7b` đạt 4/20. Gần như mọi lỗi là model **không gọi công cụ**, chỉ trả lời chữ.
+- **Nguyên nhân gốc tìm ra từ log Ollama:** prompt khoảng 4300 token vượt cửa sổ ngữ cảnh mặc định 4096 nên bị cắt còn khoảng 2050 token, model không còn thấy mô tả công cụ.
+- **Vòng 1 (rút gọn prompt và mô tả công cụ):** 2 → 8/20 và 4 → 13/20. **Vòng 2 (thêm ví dụ mẫu):** 9/20 và 11/20, không cải thiện chắc chắn. **Vòng 3 (chỉ giữ 7 công cụ lõi):** 4/20 và 14/20, tức tốt hơn với model 7B nhưng tệ hơn với model 3B.
+- **Thí nghiệm đối chứng:** giữ nguyên prompt dài v6 nhưng tăng ngữ cảnh lên 16K thì `qwen2.5:7b` đạt 14/20, bằng cách rút gọn. Vậy nguyên nhân là ngữ cảnh, không phải chất lượng prompt.
+- **Kiểm tra ngược trên cloud:** bản prompt local tốt nhất chạy trên `gpt-4o-mini` đạt 19/20 (v6 đạt 20/20).
+- **Sự cố và cách xử lý:** lần chạy đầu `llama3.2:3b` lặp vô hạn một câu trả lời (hơn 22.000 token cho một tình huống), làm máy nóng. Tôi dừng ngay, hủy run đó (không tính), và tạo bản model có giới hạn độ dài 600 token (cùng trọng số) rồi chạy lại.
+- **Bằng chứng:** `runs/*_ollama_*.json`, `artifacts/local/` (prompt và công cụ bản local), `analysis/local_models_summary.csv`, các dòng v6-*, v7-local-*, v8-local-*, v9-local-* trong `version_log.csv`, mục B7 báo cáo nhóm.
+- **Dọn dẹp:** sau khi xong đã gỡ Ollama và xóa hai model, giải phóng khoảng 7 GB.
+
 ### v6 — Bài toán chia tiền tự lập luận, không gọi công cụ tính
 
 - **Vì sao:** sau khi thêm `calc` (v5), tình huống G10 (chia tiền, kỳ vọng không gọi công cụ) bị sai vì agent gọi `calc` hai lần.

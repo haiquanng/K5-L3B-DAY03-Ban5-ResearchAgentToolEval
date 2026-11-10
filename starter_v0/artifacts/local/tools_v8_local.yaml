@@ -1,0 +1,281 @@
+tools:
+- name: clarify
+  description: 'Ask the user a question when info is missing or to confirm before sending. response_type: text, yes_no or choice.'
+  parameters:
+    type: object
+    properties:
+      question:
+        type: string
+        default: ''
+        description: Short question for the user
+      response_type:
+        type: string
+        enum:
+        - text
+        - yes_no
+        - choice
+        default: text
+      options:
+        type: array
+        default: []
+        items:
+          type: string
+    required:
+    - question
+- name: timeline
+  description: Get recent posts of ONE Twitter/X user.
+  parameters:
+    type: object
+    properties:
+      screenname:
+        type: string
+        default: ''
+        description: Twitter handle without @
+      limit:
+        type: integer
+        default: 5
+    required:
+    - screenname
+- name: social_search
+  description: Search tweets about a topic (not one user).
+  parameters:
+    type: object
+    properties:
+      query:
+        type: string
+        default: ''
+        description: Topic keywords
+      search_type:
+        type: string
+        enum:
+        - Latest
+        - Top
+        default: Latest
+        description: Latest or Top
+      limit:
+        type: integer
+        default: 5
+    required:
+    - query
+- name: lookup
+  description: Search the web for news or facts.
+  parameters:
+    type: object
+    properties:
+      query:
+        type: string
+        default: ''
+        description: Subject only, e.g. AI
+      topic:
+        type: string
+        enum:
+        - general
+        - news
+        default: general
+        description: news for news, else general
+      timeframe:
+        type: string
+        enum:
+        - day
+        - week
+        - month
+        - year
+        default: week
+        description: day, week, month or year
+      max_results:
+        type: integer
+        default: 5
+    required:
+    - query
+- name: fetch
+  description: Read the text of a given URL.
+  parameters:
+    type: object
+    properties:
+      url:
+        type: string
+        default: ''
+        description: Full URL
+    required:
+    - url
+- name: format
+  description: Format collected items into a digest text.
+  parameters:
+    type: object
+    properties:
+      items:
+        type: array
+        default: []
+        items:
+          type: object
+          properties:
+            title:
+              type: string
+            url:
+              type: string
+            source:
+              type: string
+            summary:
+              type: string
+            section:
+              type: string
+      template:
+        type: string
+        enum:
+        - brief
+        - sections
+        - bullets
+        - thread
+        - daily_ai_vn
+        default: sections
+      headline:
+        type: string
+        default: ''
+    required:
+    - items
+    - template
+- name: send
+  description: Send text to Telegram. Only after the user confirmed; then set confirmed=true.
+  parameters:
+    type: object
+    properties:
+      text:
+        type: string
+        default: ''
+        description: Exact text to send
+      confirmed:
+        type: boolean
+        default: false
+        description: true only after the user said yes
+    required:
+    - text
+- name: policy
+  description: Search internal company policy documents.
+  parameters:
+    type: object
+    properties:
+      query:
+        type: string
+        default: ''
+      policy_area:
+        type: string
+        enum:
+        - all
+        - ai_research
+        - source_citation
+        - data_privacy
+        - external_publishing
+        - tool_usage
+        default: all
+      top_k:
+        type: integer
+        default: 3
+    required:
+    - query
+- name: papers
+  description: Search arXiv papers by research topic.
+  parameters:
+    type: object
+    properties:
+      query:
+        type: string
+        default: ''
+      max_results:
+        type: integer
+        default: 5
+      sort_by:
+        type: string
+        enum:
+        - relevance
+        - lastUpdatedDate
+        - submittedDate
+        default: relevance
+    required:
+    - query
+- name: paper_text
+  description: Read the text of an arXiv paper by id or URL.
+  parameters:
+    type: object
+    properties:
+      arxiv_url:
+        type: string
+        default: ''
+      max_pages:
+        type: integer
+        default: 5
+      max_chars:
+        type: integer
+        default: 8000
+    required:
+    - arxiv_url
+- name: stats
+  description: Mean, median or stdev of a list of numbers.
+  parameters:
+    type: object
+    properties:
+      values:
+        type: array
+        items:
+          type: number
+      statistic:
+        type: string
+        enum:
+        - mean
+        - median
+        - stdev
+        default: mean
+    required:
+    - values
+- name: calc
+  description: Compute one arithmetic expression such as (1+2)*3.
+  parameters:
+    type: object
+    properties:
+      expression:
+        type: string
+    required:
+    - expression
+- name: compare
+  description: 'Compare two numbers: difference and percent change.'
+  parameters:
+    type: object
+    properties:
+      a:
+        type: number
+      b:
+        type: number
+      label_a:
+        type: string
+        default: A
+      label_b:
+        type: string
+        default: B
+    required:
+    - a
+    - b
+- name: dedupe
+  description: Remove duplicate items from a list by url or title.
+  parameters:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+          properties:
+            title:
+              type: string
+            url:
+              type: string
+            source:
+              type: string
+            summary:
+              type: string
+      key:
+        type: string
+        enum:
+        - url
+        - title
+        default: url
+    required:
+    - items

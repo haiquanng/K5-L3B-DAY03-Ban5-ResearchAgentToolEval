@@ -1,0 +1,151 @@
+tools:
+- name: clarify
+  description: 'Ask the user a question when info is missing or to confirm before sending. response_type: text, yes_no or choice.'
+  parameters:
+    type: object
+    properties:
+      question:
+        type: string
+        default: ''
+        description: Short question for the user
+      response_type:
+        type: string
+        enum:
+        - text
+        - yes_no
+        - choice
+        default: text
+      options:
+        type: array
+        default: []
+        items:
+          type: string
+    required:
+    - question
+- name: timeline
+  description: Get recent posts of ONE Twitter/X user.
+  parameters:
+    type: object
+    properties:
+      screenname:
+        type: string
+        default: ''
+        description: Twitter handle without @
+      limit:
+        type: integer
+        default: 5
+    required:
+    - screenname
+- name: social_search
+  description: Search tweets about a topic (not one user).
+  parameters:
+    type: object
+    properties:
+      query:
+        type: string
+        default: ''
+        description: Topic keywords
+      search_type:
+        type: string
+        enum:
+        - Latest
+        - Top
+        default: Latest
+        description: Latest or Top
+      limit:
+        type: integer
+        default: 5
+    required:
+    - query
+- name: lookup
+  description: Search the web for news or facts.
+  parameters:
+    type: object
+    properties:
+      query:
+        type: string
+        default: ''
+        description: Subject only, e.g. AI
+      topic:
+        type: string
+        enum:
+        - general
+        - news
+        default: general
+        description: news for news, else general
+      timeframe:
+        type: string
+        enum:
+        - day
+        - week
+        - month
+        - year
+        default: week
+        description: day, week, month or year
+      max_results:
+        type: integer
+        default: 5
+    required:
+    - query
+- name: fetch
+  description: Read the text of a given URL.
+  parameters:
+    type: object
+    properties:
+      url:
+        type: string
+        default: ''
+        description: Full URL
+    required:
+    - url
+- name: format
+  description: Format collected items into a digest text.
+  parameters:
+    type: object
+    properties:
+      items:
+        type: array
+        default: []
+        items:
+          type: object
+          properties:
+            title:
+              type: string
+            url:
+              type: string
+            source:
+              type: string
+            summary:
+              type: string
+            section:
+              type: string
+      template:
+        type: string
+        enum:
+        - brief
+        - sections
+        - bullets
+        - thread
+        - daily_ai_vn
+        default: sections
+      headline:
+        type: string
+        default: ''
+    required:
+    - items
+    - template
+- name: send
+  description: Send text to Telegram. Only after the user confirmed; then set confirmed=true.
+  parameters:
+    type: object
+    properties:
+      text:
+        type: string
+        default: ''
+        description: Exact text to send
+      confirmed:
+        type: boolean
+        default: false
+        description: true only after the user said yes
+    required:
+    - text

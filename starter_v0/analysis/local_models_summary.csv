@@ -1,0 +1,11 @@
+run_label,case_accuracy,tool_routing,argument,multiturn,provider_error_cases,run_file
+v6-llama3b,0.1,0.1,0.1,0.0,0,runs/v6-llama3b_B_base_ollama_20261111T001048409672.json
+v6-qwen7b,0.2,0.2,0.2,0.1667,0,runs/v6-qwen7b_B_base_ollama_20261111T001411529625.json
+v7-local-llama3b,0.4,0.6,0.4,0.5,0,runs/v7-local-llama3b_B_base_ollama_20261111T002723875555.json
+v7-local-qwen7b,0.65,0.8,0.65,0.6667,0,runs/v7-local-qwen7b_B_base_ollama_20261111T002857827030.json
+v8-local-llama3b,0.45,0.65,0.45,0.6667,0,runs/v8-local-llama3b_B_base_ollama_20261111T003028029395.json
+v8-local-qwen7b,0.55,0.65,0.55,0.8333,0,runs/v8-local-qwen7b_B_base_ollama_20261111T003153274982.json
+v9-local-llama3b,0.2,0.5,0.2,0.3333,0,runs/v9-local-llama3b_B_base_ollama_20261111T003258469982.json
+v9-local-qwen7b,0.7,0.9,0.7,0.6667,0,runs/v9-local-qwen7b_B_base_ollama_20261111T003433084102.json
+v6-qwen7b-ctx16k,0.7,0.8,0.7,0.6667,0,runs/v6-qwen7b-ctx16k_B_base_ollama_20261111T003815931780.json
+v9-local-cloud,0.95,1.0,0.95,1.0,0,runs/v9-local-cloud_B_base_openai_20261111T003549195921.json

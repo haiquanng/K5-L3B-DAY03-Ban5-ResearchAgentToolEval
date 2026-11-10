@@ -171,7 +171,7 @@ Chỉ điền nếu nhóm làm bonus (ghi riêng, tối đa 10 điểm). Tool c�
 
 | Bonus | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
-| Small Local Model | xem B7 | Chưa triển khai | Cần cấu hình GPU local |
+| Small Local Model | xem B7; `starter_v0/runs/v6-*`, `v7-local-*`, `v8-local-*`, `v9-local-*` (`_ollama_`), `starter_v0/analysis/local_models_summary.csv`, `starter_v0/artifacts/local/` | 2 model (`llama3.2:3b`, `qwen2.5:7b`), 3 vòng tối ưu có log, thí nghiệm đối chứng ngữ cảnh 16K và kiểm tra ngược trên cloud. Rút gọn prompt cho vừa ngữ cảnh đưa `qwen2.5:7b` từ 4/20 lên 14/20 | Model nhỏ hay bỏ qua `clarify` và có thể lặp vô hạn nên phải giới hạn `num_predict`; `send` vẫn phải chặn bằng code |
 | Hơn 3 tool mới (≥ 4) | `starter_v0/tools/{stats,calc,compare,dedupe}/` (`tool.py` + `TOOL.md`), đăng ký ở `tools/__init__.py` và `artifacts/tools.yaml`; test trong `starter_v0/tests/test_tools_todo.py`; 7 case route tới tool mới trong `starter_v0/data/eval_bonus_tools.json`, run `starter_v0/runs/v6_B_extension_openai_20261111T000048410205.json` (7/7) | 4 tool tự viết: `stats` (Đức), `calc`, `compare`, `dedupe`. Mỗi tool có ≥ 3 test (đúng, đầu vào xấu, nhánh lỗi), tổng 200 test đạt, 0 skipped. Thêm tool làm group tụt 10/10 xuống 9/10 ở G10 (agent gọi `calc` cho bài chia tiền), sửa bằng v6 mà không đổi case | `calc` không dùng `eval()` mà tự phân tích cú pháp, chặn tên, hàm, lũy thừa lớn và kết quả phức; mô tả `calc` nói rõ không dùng cho bài toán lời văn |
 | `send` gửi thật lên Telegram sau xác nhận | `starter_v0/transcripts/v3_openrouter_20261110T195604556819.transcript.json` | Luồng Human-in-the-Loop hoàn chỉnh: agent hỏi duyệt `yes_no` -> user xác nhận `"Đồng ý"` -> gọi `send(confirmed=true)` -> `status: sent` trên Telegram của nhóm | Tool kiểm tra cờ `confirmed: bool`; nếu `false` thì từ chối gửi (`needs_confirmation`), bảo vệ kênh tránh spam ngoài ý muốn |
 | Test challenge (0 skipped / regression test) | `starter_v0/analysis/duclt_pytest.txt`, output `pytest` | Toàn bộ suite đạt **130 passed, 0 failed, 0 skipped** (xóa bỏ 17 skip mặc định, mở rộng 37 parametrization test cases) | Kiểm tra toàn bộ biên cắt ký tự markdown (4000 chars), missing env vars, types validation |
@@ -182,11 +182,46 @@ Test challenge: số bug tìm được trong tool có sẵn (nếu có), cách s
 
 ### B7. Small Local Model Challenge (bonus)
 
-Chỉ điền nếu nhóm làm bonus này.
+Máy chạy: MacBook 16 GB RAM, Ollama 0.40, nhiệt độ 0. Cả hai model được tạo bản có giới hạn `num_predict=600` (cùng trọng số, chỉ thêm tham số) vì lần chạy đầu `llama3.2:3b` lặp vô hạn một câu trả lời (hơn 22.000 token cho một case) và làm máy nóng; run bị hủy đó không được tính. Các run baseline `v6-*` dùng model gốc và đã chạy xong bình thường. Mọi run đều hợp lệ (`provider_error_cases = 0`, đo đủ 20/20 case). Tất cả chạy trên bộ base 20 case với công cụ thật (Telegram tắt).
 
 | Version | Model (provider) | Prompt/Tools | case_accuracy | tool_routing | argument | multiturn | Run File |
 |---|---|---|---|---|---|---|---|
-| v3 | openai/gpt-4o-mini (openrouter) | v3 | 1.00 | 1.00 | 1.00 | 1.00 | starter_v0/runs/v3_B_base_openrouter_20261110T191959929397.json |
+| v6 | gpt-4o-mini (openai) | v6 (prompt dài) | 1.00 | 1.00 | 1.00 | 1.00 | `starter_v0/runs/v6_B_base_openai_20261111T000037544456.json` |
+| v6-llama3b | llama3.2:3b (ollama) | v6, ngữ cảnh 4K | 0.10 | 0.10 | 0.10 | 0.00 | `starter_v0/runs/v6-llama3b_B_base_ollama_20261111T001048409672.json` |
+| v6-qwen7b | qwen2.5:7b (ollama) | v6, ngữ cảnh 4K | 0.20 | 0.20 | 0.20 | 0.17 | `starter_v0/runs/v6-qwen7b_B_base_ollama_20261111T001411529625.json` |
+| v7-local-llama3b | llama3.2:3b (ollama) | v7-local (rút gọn) | 0.40 | 0.60 | 0.40 | 0.50 | `starter_v0/runs/v7-local-llama3b_B_base_ollama_20261111T002723875555.json` |
+| v7-local-qwen7b | qwen2.5:7b (ollama) | v7-local (rút gọn) | 0.65 | 0.80 | 0.65 | 0.67 | `starter_v0/runs/v7-local-qwen7b_B_base_ollama_20261111T002857827030.json` |
+| v8-local-llama3b | llama3.2:3b (ollama) | v8-local (+few-shot) | 0.45 | 0.65 | 0.45 | 0.67 | `starter_v0/runs/v8-local-llama3b_B_base_ollama_20261111T003028029395.json` |
+| v8-local-qwen7b | qwen2.5:7b (ollama) | v8-local (+few-shot) | 0.55 | 0.65 | 0.55 | 0.83 | `starter_v0/runs/v8-local-qwen7b_B_base_ollama_20261111T003153274982.json` |
+| v9-local-llama3b | llama3.2:3b (ollama) | v9-local (7 tool) | 0.20 | 0.50 | 0.20 | 0.33 | `starter_v0/runs/v9-local-llama3b_B_base_ollama_20261111T003258469982.json` |
+| v9-local-qwen7b | qwen2.5:7b (ollama) | v9-local (7 tool) | 0.70 | 0.90 | 0.70 | 0.67 | `starter_v0/runs/v9-local-qwen7b_B_base_ollama_20261111T003433084102.json` |
+| v6-qwen7b-ctx16k (đối chứng) | qwen2.5:7b (ollama) | v6 dài, ngữ cảnh 16K | 0.70 | 0.80 | 0.70 | 0.67 | `starter_v0/runs/v6-qwen7b-ctx16k_B_base_ollama_20261111T003815931780.json` |
+| v9-local-cloud (kiểm tra ngược) | gpt-4o-mini (openai) | v9-local | 0.95 | 1.00 | 0.95 | 1.00 | `starter_v0/runs/v9-local-cloud_B_base_openai_20261111T003549195921.json` |
+
+**Ba vòng tối ưu cho local (mỗi vòng một giả thuyết, đều ghi trong `artifacts/version_log.csv`):**
+1. **v7-local, rút gọn prompt và mô tả tool** từ khoảng 17.600 ký tự (≈ 4.300 token) xuống khoảng 6.300 ký tự (≈ 1.500 token). Giả thuyết: log Ollama báo `truncating input prompt limit=2050 prompt=4305`, tức prompt vượt cửa sổ 4096 token và bị cắt mất phần mô tả tool. Kết quả: `llama3.2:3b` 2 → 8/20, `qwen2.5:7b` 4 → 13/20. Giả thuyết đúng.
+2. **v8-local, thêm ví dụ few-shot** (nội dung khác bộ test để không học vẹt) và quy tắc "không viết tool call thành chữ". Kết quả lẫn lộn: `llama3.2:3b` 8 → 9 (+1), `qwen2.5:7b` 13 → 11 (−2). Ghi nhận là không cải thiện chắc chắn.
+3. **v9-local, chỉ giữ 7 tool lõi** của bộ test. `qwen2.5:7b` 13 → **14/20** (routing 0,90), nhưng `llama3.2:3b` tụt 8 → 4/20. Tối ưu nên chọn theo từng model, không có một cách tốt cho tất cả.
+
+**Lỗi đặc thù của model nhỏ (đếm từ run JSON; một case có thể có nhiều mẫu lỗi):**
+
+| Failure Pattern | Count (llama3b v6 / qwen7b v6 / qwen7b v9-local) | Example Case | Fix Tried | Helped? |
+|---|---|---|---|---|
+| wrong / hallucinated tool | 4 / 3 / 0 | R08 (llama gọi `calc` cho tích phân) | v9: bớt tool | Có với 7B, không với 3B |
+| invalid JSON args (`_invalid_json_arguments`) | 0 / 0 / 0 | — | — | Không gặp |
+| no tool call / answered directly | 13 / 12 / 1 | R01, R05 (trả lời chữ thay vì gọi tool) | v7: rút gọn cho vừa ngữ cảnh | Có, giảm mạnh |
+| missed `clarify` | 3 / 3 / 2 | R10, R11, R12 | v8: few-shot | Không rõ (3B +1, 7B −2) |
+| repeated / unnecessary calls | 4 / 4 / 1 | R09 | v9: bớt tool | Một phần |
+
+Ngoài ra `llama3.2:3b` có lúc viết tool call thành chữ JSON (R12, bản v7) thay vì gọi qua cơ chế tool, và lặp vô hạn khi không giới hạn độ dài.
+
+**Kết luận có bằng chứng:**
+- **Điều giúp model nhỏ gọi tool đúng nhiều nhất là để prompt và mô tả tool lọt vào cửa sổ ngữ cảnh.** Bằng chứng: dòng log `truncating input prompt`, và thí nghiệm đối chứng `v6-qwen7b-ctx16k`: giữ nguyên prompt dài v6, chỉ tăng ngữ cảnh lên 16K thì `qwen2.5:7b` vọt từ 4/20 lên **14/20**, bằng kết quả tốt nhất của cách rút gọn (14/20). Hai cách cho kết quả tương đương, nên nguyên nhân gốc là ngữ cảnh chứ không phải chất lượng prompt.
+- Few-shot và bớt tool chỉ thay đổi ±1–4 case và phụ thuộc từng model.
+- **Bản prompt tối ưu cho local chạy trên cloud:** `v9-local` trên `gpt-4o-mini` đạt 19/20 (0,95), chỉ mất R12 so với 20/20 của v6. Dùng được cho cả hai nhưng kém nhẹ trên cloud.
+- **Khi nào chọn local thay cloud:** khi dữ liệu không được rời máy hoặc cần chạy offline, và chỉ cho tác vụ đơn giản. Tốt nhất là `qwen2.5:7b` đạt khoảng 70% so với 100% của cloud trên bộ test này, còn hay bỏ qua `clarify`. Với hành động có tác dụng phụ như `send` thì không nên tin model nhỏ mà phải chặn bằng code (chỉ gửi khi `confirmed=true` đã được người dùng xác nhận).
+
+Giới hạn: chỉ đo trên bộ base 20 case với một lần chạy mỗi cấu hình; chênh lệch 1–2 case có thể là dao động của model.
 
 ## 5. Khó khăn và cách xử lý
 
