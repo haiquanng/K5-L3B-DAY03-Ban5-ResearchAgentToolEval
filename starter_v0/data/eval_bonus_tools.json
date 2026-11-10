@@ -1,0 +1,185 @@
+{
+  "dataset_id": "day03_v5_bonus_tools",
+  "dataset_role": "extension",
+  "description": "Case nhóm Ban5 cho 3 tool mới của bonus (calc, compare, dedupe). File riêng để eval_group.json giữ đúng 10 case.",
+  "allowed_failure_types": [
+    "wrong_tool",
+    "wrong_arg_value",
+    "wrong_boundary",
+    "unnecessary_tool",
+    "out_of_scope",
+    "missing_info"
+  ],
+  "cases": [
+    {
+      "id": "B01_calc_expression",
+      "phase": "B",
+      "suite": "extension",
+      "query": "Tính giúp tôi (1250 + 380) * 12 / 4",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "calc",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "route_calc",
+        "difficulty": "easy",
+        "what_it_tests": "Một biểu thức số học cụ thể -> gọi calc để ra số chính xác, không tự nhẩm."
+      }
+    },
+    {
+      "id": "B02_calc_with_power",
+      "phase": "B",
+      "suite": "extension",
+      "query": "Cho tôi kết quả của 17 * 23 + 2 ^ 10",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "calc",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "route_calc_power",
+        "difficulty": "medium",
+        "what_it_tests": "Biểu thức có lũy thừa dùng dấu ^ -> vẫn gọi calc."
+      }
+    },
+    {
+      "id": "B03_multiturn_calc",
+      "phase": "B",
+      "suite": "extension",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tôi cần tính nhanh một phép tính"
+        },
+        {
+          "role": "user",
+          "content": "Tính 365 * 24 - 1000"
+        }
+      ],
+      "failure_type": "missing_info",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "calc",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "multiturn_calc",
+        "difficulty": "medium",
+        "what_it_tests": "Lượt đầu chưa có biểu thức, lượt sau có -> gọi calc cho biểu thức ở lượt cuối."
+      }
+    },
+    {
+      "id": "B04_compare_percent",
+      "phase": "B",
+      "suite": "extension",
+      "query": "Doanh thu tháng này là 1200, tháng trước là 1000. Tăng bao nhiêu phần trăm?",
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "compare",
+            "args": {
+              "a": 1000,
+              "b": 1200
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "route_compare",
+        "difficulty": "medium",
+        "what_it_tests": "So sánh hai giá trị -> compare; a phải là mốc cũ (tháng trước = 1000), b là giá trị mới (1200)."
+      }
+    },
+    {
+      "id": "B05_multiturn_compare",
+      "phase": "B",
+      "suite": "extension",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Chi phí quý 1 của nhóm là 80"
+        },
+        {
+          "role": "user",
+          "content": "Quý 2 là 100, so sánh giúp tôi quý 2 hơn quý 1 bao nhiêu"
+        }
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "compare",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "multiturn_compare",
+        "difficulty": "medium",
+        "what_it_tests": "Hai giá trị nằm ở hai lượt -> gom lại và gọi compare."
+      }
+    },
+    {
+      "id": "B06_dedupe_urls",
+      "phase": "B",
+      "suite": "extension",
+      "query": "Loại các bài trùng trong danh sách này: 1) 'AI mới ra mắt' https://a.com/x 2) 'AI mới ra mắt (bản 2)' https://www.a.com/x/ 3) 'Tin khác' https://b.com/y",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "dedupe",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "route_dedupe",
+        "difficulty": "medium",
+        "what_it_tests": "Danh sách có mục trùng URL cần làm sạch -> gọi dedupe, không tự lọc bằng tay."
+      }
+    },
+    {
+      "id": "B07_multiturn_dedupe",
+      "phase": "B",
+      "suite": "extension",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tôi vừa tìm được ba bài: 'Mô hình A' https://x.com/a, 'Mô hình A' https://x.com/a?utm_source=tw, 'Mô hình B' https://x.com/b"
+        },
+        {
+          "role": "user",
+          "content": "Gom lại giúp tôi, bỏ các bài trùng nhau"
+        }
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "dedupe",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "multiturn_dedupe",
+        "difficulty": "medium",
+        "what_it_tests": "Danh sách ở lượt trước, yêu cầu lọc trùng ở lượt sau -> gọi dedupe."
+      }
+    }
+  ]
+}

@@ -17,10 +17,10 @@ def sha(path: Path) -> str:
 
 
 def test_v0_to_v3_are_frozen() -> None:
-    assert server.available_versions()[:5] == ["v0", "v1", "v2", "v3", "v4"]
+    assert server.available_versions()[:7] == ["v0", "v1", "v2", "v3", "v4", "v5", "v6"]
 
 
-@pytest.mark.parametrize("version", ["v0", "v1", "v2", "v3", "v4"])
+@pytest.mark.parametrize("version", ["v0", "v1", "v2", "v3", "v4", "v5", "v6"])
 def test_frozen_version_hashes_match_version_log(version: str) -> None:
     rows = {r["version"]: r for r in csv.DictReader((ARTIFACTS / "version_log.csv").open(encoding="utf-8"))}
     base = ARTIFACTS / "versions" / version

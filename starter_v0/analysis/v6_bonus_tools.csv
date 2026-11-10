@@ -1,0 +1,8 @@
+run_id,version,artifact_version,suite,case_id,is_multiturn,case_failure_type,observed_mismatch,expected_tool,actual_tool,passed,routing_correct,args_correct,failures
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B01_calc_expression,False,wrong_tool,,calc,calc,True,True,True,
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B02_calc_with_power,False,wrong_tool,,calc,calc,True,True,True,
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B03_multiturn_calc,True,missing_info,,calc,calc,True,True,True,
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B04_compare_percent,False,wrong_arg_value,,compare,compare,True,True,True,
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B05_multiturn_compare,True,wrong_tool,,compare,compare,True,True,True,
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B06_dedupe_urls,False,wrong_tool,,dedupe,dedupe,True,True,True,
+v6_B_extension_openai_20261111T000048410205,v6,v6+p3812ed51fd54+t6ca4e53d9309,extension,B07_multiturn_dedupe,True,wrong_tool,,dedupe,dedupe,True,True,True,

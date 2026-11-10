@@ -212,6 +212,21 @@ Tên run JSON trong lệnh parse là file của lần đo cuối đã thực hi�
 - **Phát hiện kèm theo:** bản v3 xử lý đúng câu "Đăng bản tin này lên Telegram giúp mình" nhưng lệch với cách nói khác như "Đưa tin này lên Telegram giúp tôi" (agent hỏi bằng chữ thường, không dùng công cụ hỏi lại). Điểm 20/20 của v3 phụ thuộc vào câu chữ của từng tình huống.
 - **Việc tiếp theo:** đề xuất v4 liệt kê đủ các cách nói gửi/đăng/đưa và nêu nguyên văn nội dung khi xin xác nhận.
 
+### v6 — Bài toán chia tiền tự lập luận, không gọi công cụ tính
+
+- **Vì sao:** sau khi thêm `calc` (v5), tình huống G10 (chia tiền, kỳ vọng không gọi công cụ) bị sai vì agent gọi `calc` hai lần.
+- **Sửa gì:** thêm một dòng vào prompt: bài toán lời văn nhiều bước về chia tiền thì tự lập luận, không gọi công cụ. Không sửa tình huống của nhóm.
+- **Kết quả (`gpt-4o-mini`, `openai`, Telegram tắt):** group **10/10** (từ 9/10), base **20/20**, 7 tình huống tool mới **7/7**. Cả ba run hợp lệ.
+- **Bằng chứng:** `runs/v6_B_group_openai_20261110T235933922995.json`, `runs/v6_B_base_openai_20261111T000037544456.json`, `runs/v6_B_extension_openai_20261111T000048410205.json`; bản đóng băng `artifacts/versions/v6/`.
+
+### v5 — Thêm ba tool mới: calc, compare, dedupe (bonus)
+
+- **Thêm:** `tools/calc` (tính biểu thức, tự phân tích cú pháp, không dùng `eval()`), `tools/compare` (so sánh hai số), `tools/dedupe` (lọc mục trùng). Mỗi tool có `TOOL.md`, đăng ký trong `tools/__init__.py`, khai báo trong `tools.yaml` và rule chọn tool trong prompt.
+- **Test:** thêm 52 test (calc 28, compare 14, dedupe 10; mỗi tool đủ ba nhánh: đúng, đầu vào xấu, lỗi); toàn bộ **200 test đạt, 0 skipped**. Có thử các đầu vào độc hại như `__import__('os')`, `9**9**9`, `(10**100)**100`: đều bị từ chối ngay.
+- **Tình huống eval cho tool mới:** 7 tình huống trong `data/eval_bonus_tools.json` (file riêng, để `eval_group.json` giữ đúng 10 tình huống).
+- **Kết quả v5:** base 20/20, tool mới 7/7, nhưng group **9/10**: G10 (chia tiền) sai do agent gọi `calc`. Đây là hệ quả thật của việc thêm tool; ghi nhận trung thực rồi sửa ở v6.
+- **Bằng chứng:** `runs/v5_B_*_openai_*.json`; bản đóng băng `artifacts/versions/v5/`.
+
 ### v4 — Quy tắc arXiv và mô tả công cụ chặt hơn (do Trung làm, đã ghi nhận chính thức)
 
 - **Vì sao có mục này:** prompt và `tools.yaml` hiện tại đã khác v3, nhưng nhiều run vẫn mang nhãn "v3". Nay xác nhận đó là **v4** và đã chạy lại cho sạch.

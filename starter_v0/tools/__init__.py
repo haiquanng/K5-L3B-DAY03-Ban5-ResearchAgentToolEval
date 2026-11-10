@@ -18,6 +18,9 @@ from .social_search.tool import search_tweets
 from .send.tool import send_telegram
 from .lookup.tool import web_search
 from .stats.tool import summarize_stats
+from .calc.tool import calculate
+from .compare.tool import compare_values
+from .dedupe.tool import dedupe_items
 
 
 # NOTE (starter_v0): tool names here are intentionally vague. These keys are the
@@ -37,6 +40,9 @@ TOOL_FUNCTIONS = {
     "papers": arxiv_search,
     "paper_text": get_arxiv_paper_text,
     "stats": summarize_stats,
+    "calc": calculate,
+    "compare": compare_values,
+    "dedupe": dedupe_items,
     # TODO CP3 (student): register your new tool here, e.g. "my_tool": my_tool_function,
     # then declare it in artifacts/tools.yaml and run `pytest tests/test_tool_contract.py`.
 }

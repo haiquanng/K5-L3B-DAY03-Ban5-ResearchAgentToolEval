@@ -273,3 +273,124 @@ def test_stats_failure_returns_error_dict() -> None:
     assert result["error"] == "StatisticsError"
     assert result["message"]
     assert "value" not in result
+
+
+# ---------------- calc (new tool) ----------------
+
+@pytest.mark.parametrize("expression, expected", [
+    ("(1250 + 380) * 12 / 4", 4890.0),
+    ("2 ** 10", 1024),
+    ("2 ^ 10", 1024),            # ^ is accepted as power
+    ("7 // 2 + 7 % 2", 4),
+    ("-3 * (2 + 5)", -21),
+    ("12 × 3 ÷ 4", 9.0),
+    ("0.1 + 0.2", pytest.approx(0.3)),
+])
+def test_calc_happy_path(expression, expected) -> None:
+    result = TOOL_FUNCTIONS["calc"](expression=expression)
+    assert result["tool"] == "calc"
+    assert result["value"] == expected
+    assert "error" not in result
+
+
+@pytest.mark.parametrize("expression", [
+    "", "   ", None, 42, ["1+1"],                      # not a usable string
+    "x + 1", "abs(-1)", "__import__('os').system('ls')",  # names and calls
+    "'a' * 3", "True + 1", "1 if 1 else 2",             # strings, bool, conditional
+    "(1).real", "[1, 2][0]",                            # attribute and subscript
+    "1 +", "((1)",                                      # syntax errors
+    "1" * 300,                                          # too long
+])
+def test_calc_bad_input_from_model(expression) -> None:
+    result = TOOL_FUNCTIONS["calc"](expression=expression)
+    assert result["tool"] == "calc"
+    assert result["error"] == "ValueError"
+    assert result["message"]
+    assert "value" not in result
+
+
+@pytest.mark.parametrize("expression, error", [
+    ("1 / 0", "ZeroDivisionError"),
+    ("5 % 0", "ZeroDivisionError"),
+    ("9 ** 9 ** 9", "ValueError"),     # exponent too large: must not hang
+    ("(-8) ** 0.5", "ValueError"),     # would be a complex number
+    ("(10 ** 100) ** 100", "ValueError"),  # result too large (33k bits)
+])
+def test_calc_failure_returns_error_dict_and_never_raises(expression, error) -> None:
+    result = TOOL_FUNCTIONS["calc"](expression=expression)
+    assert result["error"] == error
+    assert "value" not in result
+
+
+# ---------------- compare (new tool) ----------------
+
+def test_compare_happy_path_percent_change_is_relative_to_a() -> None:
+    result = TOOL_FUNCTIONS["compare"](a=1000, b=1200, label_a="Tháng trước", label_b="Tháng này")
+    assert result["difference"] == 200
+    assert result["percent_change"] == 20.0
+    assert result["ratio"] == 1.2
+    assert result["larger"] == "Tháng này"
+
+
+def test_compare_decrease_and_equal_values() -> None:
+    drop = TOOL_FUNCTIONS["compare"](a=200, b=150)
+    assert drop["difference"] == -50 and drop["percent_change"] == -25.0 and drop["larger"] == "A"
+    same = TOOL_FUNCTIONS["compare"](a=3.5, b=3.5)
+    assert same["larger"] == "equal" and same["percent_change"] == 0.0
+
+
+def test_compare_baseline_zero_has_no_percentage() -> None:
+    result = TOOL_FUNCTIONS["compare"](a=0, b=5)
+    assert result["difference"] == 5
+    assert result["percent_change"] is None and result["ratio"] is None
+
+
+@pytest.mark.parametrize("kwargs", [
+    {}, {"a": 1}, {"b": 1},                                  # missing
+    {"a": "1", "b": 2}, {"a": True, "b": 2}, {"a": [1], "b": 2},   # wrong types
+    {"a": float("nan"), "b": 1}, {"a": 1, "b": float("inf")},      # not finite
+    {"a": 1, "b": 2, "label_a": ""}, {"a": 1, "b": 2, "label_b": "x" * 80}, {"a": 1, "b": 2, "label_a": 5},
+])
+def test_compare_bad_input_returns_error_dict(kwargs) -> None:
+    result = TOOL_FUNCTIONS["compare"](**kwargs)
+    assert result["tool"] == "compare"
+    assert result["error"] == "ValueError"
+    assert "difference" not in result
+
+
+# ---------------- dedupe (new tool) ----------------
+
+def test_dedupe_by_url_ignores_www_case_slash_fragment_and_tracking() -> None:
+    items = [
+        {"title": "Bài A", "url": "https://www.Example.com/news/ai/?utm_source=x&id=7"},
+        {"title": "Bài A (bản khác)", "url": "https://example.com/news/ai?id=7#top"},
+        {"title": "Bài B", "url": "https://example.com/news/other"},
+    ]
+    result = TOOL_FUNCTIONS["dedupe"](items=items)
+    assert [i["title"] for i in result["items"]] == ["Bài A", "Bài B"]
+    assert result["count"] == 2 and result["removed"] == 1
+
+
+def test_dedupe_by_title_ignores_case_accents_and_punctuation() -> None:
+    items = [{"title": "OpenAI ra mắt mô hình mới!"}, {"title": "openai ra mat mo hinh moi"}, {"title": "Tin khác"}]
+    result = TOOL_FUNCTIONS["dedupe"](items=items, key="title")
+    assert result["count"] == 2 and result["removed"] == 1
+
+
+def test_dedupe_keeps_items_without_the_key_and_does_not_mutate_input() -> None:
+    items = [{"title": "A", "url": "https://a.com/x"}, {"title": "B"}, {"title": "C", "url": ""}, {"title": "A2", "url": "https://a.com/x/"}]
+    snapshot = [dict(i) for i in items]
+    result = TOOL_FUNCTIONS["dedupe"](items=items)
+    assert [i["title"] for i in result["items"]] == ["A", "B", "C"]
+    assert items == snapshot
+
+
+@pytest.mark.parametrize("kwargs", [
+    {}, {"items": None}, {"items": "a, b"}, {"items": [1, 2]}, {"items": [{"url": "x"}, "y"]},
+    {"items": [{"url": "x"}], "key": "summary"}, {"items": [{"url": str(i)} for i in range(501)]},
+])
+def test_dedupe_bad_input_returns_error_dict(kwargs) -> None:
+    result = TOOL_FUNCTIONS["dedupe"](**kwargs)
+    assert result["tool"] == "dedupe"
+    assert result["error"] == "ValueError"
+    assert "items" not in result

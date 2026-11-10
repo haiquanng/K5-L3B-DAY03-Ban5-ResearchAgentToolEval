@@ -101,6 +101,8 @@ VERSION_LABELS = {
     "v2": "Rule chọn công cụ",
     "v3": "Mô tả công cụ rõ hơn",
     "v4": "Rule arXiv: hỏi lại khi thiếu chủ đề",
+    "v5": "Thêm 3 tool: calc, compare, dedupe",
+    "v6": "Bài toán chia tiền: tự lập luận",
 }
 
 

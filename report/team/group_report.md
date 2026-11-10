@@ -10,7 +10,7 @@
 
 - Tên nhóm: Ban5
 - Thành viên và phân công: xem [TEAM.md](../../TEAM.md)
-- Provider/model: các run v0–v4 trong `version_log.csv` chạy bằng provider `openai` (gpt-4o-mini). Một số run group trung gian và transcript live chạy bằng `openrouter` (openai/gpt-4o-mini), được ghi rõ ở từng mục.
+- Provider/model: các run v0–v6 trong `version_log.csv` chạy bằng provider `openai` (gpt-4o-mini). Một số run group trung gian và transcript live chạy bằng `openrouter` (openai/gpt-4o-mini), được ghi rõ ở từng mục.
 
 ## 2. Mục tiêu và cách tiếp cận — PHẦN A: Giới thiệu agent
 
@@ -24,7 +24,7 @@ Trợ lý nghiên cứu thị trường cá nhân: tự động tra cứu tin t�
 # Cách 1: Giao diện Web (Next.js + FastAPI Server SSE)
 # Terminal 1 - Backend:
 cd starter_v0
-python server.py --provider openai --version v4
+python server.py --provider openai --version v6
 
 # Terminal 2 - Frontend:
 cd web
@@ -33,12 +33,12 @@ npm install && npm run dev
 
 # Cách 2: Chat trực tiếp qua CLI
 cd starter_v0
-python chat.py --provider openai --version v4
+python chat.py --provider openai --version v6
 ```
 
 **Link dùng thử (deploy):**
 
-- Không dùng link deploy: người chấm clone repo, thêm key vào `starter_v0/.env` (xem `.env.example`) rồi chạy theo lệnh ở trên (giao diện tại http://localhost:3000, có ô chọn version v0–v4).
+- Không dùng link deploy: người chấm clone repo, thêm key vào `starter_v0/.env` (xem `.env.example`) rồi chạy theo lệnh ở trên (giao diện tại http://localhost:3000, có ô chọn version v0–v6).
 - Telegram Bot: Nhắn tin trực tiếp với bot Telegram của nhóm (xem hướng dẫn tại `starter_v0/telegram_bot.py`).
 
 ### A2. Tool agent có
@@ -56,6 +56,9 @@ python chat.py --provider openai --version v4
 | `papers` | Tìm kiếm bài báo khoa học trên kho arXiv | Không |
 | `paper_text` | Đọc nội dung chi tiết bài báo khoa học arXiv | Không |
 | `stats` | Tính toán thống kê mô tả: `mean`, `median`, `stdev` từ danh sách số thực | **Có (Tool mới)** |
+| `calc` | Tính chính xác một biểu thức số học (không dùng `eval()`, chặn lũy thừa quá lớn) | **Có (Tool mới)** |
+| `compare` | So sánh hai số: chênh lệch, phần trăm thay đổi, số nào lớn hơn | **Có (Tool mới)** |
+| `dedupe` | Loại mục trùng (cùng URL hoặc tiêu đề) khỏi danh sách kết quả | **Có (Tool mới)** |
 
 ### A3. Câu hỏi mẫu để thử
 
@@ -102,6 +105,8 @@ Lấy từ `starter_v0/artifacts/version_log.csv` và `starter_v0/runs/*.json`. 
 | v2 | `system_prompt.md` | Thêm rule routing theo loại yêu cầu, giữ tool khi đổi chủ đề, từ chối ngoài phạm vi, dùng yes_no khi duyệt | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | starter_v0/runs/v2_B_base_openai_20261110T181054950591.json |
 | v3 | `tools.yaml` | Làm rõ description và quy ước tham số; `clarify` ưu tiên intent gửi/đăng trước thiếu nội dung | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | case_accuracy=1.00; routing=1.00; args=1.00; multiturn=1.00 | starter_v0/runs/v3_B_base_openai_20261110T183553607506.json |
 | v4 | `system_prompt.md`, `tools.yaml` | Thêm quy tắc arXiv: không dùng `lookup` cho bài báo; thiếu chủ đề nghiên cứu thì bắt buộc `clarify`; siết mô tả `papers`, `clarify`, `lookup`, `send` | case_accuracy=1.00 (base v3); group v3 (openai)=0.70 | case_accuracy=1.00; routing=1.00; args=1.00; multiturn=1.00 (base v4); group v4 (openai)=1.00 | `starter_v0/runs/v4_B_base_openai_20261110T234636702818.json` |
+| v5 | `tools.yaml`, `system_prompt.md` | Thêm 3 tool cục bộ (`calc`, `compare`, `dedupe`) cùng rule chọn tool; kỳ vọng không làm tụt base và group | base v4=1.00; group v4=1.00 | base v5=20/20; group v5=9/10 (G10 chia tiền bị gọi `calc`); tool mới 7/7 | `starter_v0/runs/v5_B_base_openai_20261110T235825120962.json` |
+| v6 | `system_prompt.md` | Dặn bài toán lời văn nhiều bước (chia tiền) tự lập luận, không gọi tool | group v5=9/10 (G10 FAIL) | base v6=20/20; group v6=10/10; tool mới 7/7 | `starter_v0/runs/v6_B_base_openai_20261111T000037544456.json` |
 
 ### B2. Failure Analysis
 
@@ -167,7 +172,7 @@ Chỉ điền nếu nhóm làm bonus (ghi riêng, tối đa 10 điểm). Tool c�
 | Bonus | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
 | Small Local Model | xem B7 | Chưa triển khai | Cần cấu hình GPU local |
-| Hơn 3 tool mới (≥ 4) | N/A | Nhóm tập trung hoàn thiện sâu 1 tool `stats` chuẩn chỉ | |
+| Hơn 3 tool mới (≥ 4) | `starter_v0/tools/{stats,calc,compare,dedupe}/` (`tool.py` + `TOOL.md`), đăng ký ở `tools/__init__.py` và `artifacts/tools.yaml`; test trong `starter_v0/tests/test_tools_todo.py`; 7 case route tới tool mới trong `starter_v0/data/eval_bonus_tools.json`, run `starter_v0/runs/v6_B_extension_openai_20261111T000048410205.json` (7/7) | 4 tool tự viết: `stats` (Đức), `calc`, `compare`, `dedupe`. Mỗi tool có ≥ 3 test (đúng, đầu vào xấu, nhánh lỗi), tổng 200 test đạt, 0 skipped. Thêm tool làm group tụt 10/10 xuống 9/10 ở G10 (agent gọi `calc` cho bài chia tiền), sửa bằng v6 mà không đổi case | `calc` không dùng `eval()` mà tự phân tích cú pháp, chặn tên, hàm, lũy thừa lớn và kết quả phức; mô tả `calc` nói rõ không dùng cho bài toán lời văn |
 | `send` gửi thật lên Telegram sau xác nhận | `starter_v0/transcripts/v3_openrouter_20261110T195604556819.transcript.json` | Luồng Human-in-the-Loop hoàn chỉnh: agent hỏi duyệt `yes_no` -> user xác nhận `"Đồng ý"` -> gọi `send(confirmed=true)` -> `status: sent` trên Telegram của nhóm | Tool kiểm tra cờ `confirmed: bool`; nếu `false` thì từ chối gửi (`needs_confirmation`), bảo vệ kênh tránh spam ngoài ý muốn |
 | Test challenge (0 skipped / regression test) | `starter_v0/analysis/duclt_pytest.txt`, output `pytest` | Toàn bộ suite đạt **130 passed, 0 failed, 0 skipped** (xóa bỏ 17 skip mặc định, mở rộng 37 parametrization test cases) | Kiểm tra toàn bộ biên cắt ký tự markdown (4000 chars), missing env vars, types validation |
 

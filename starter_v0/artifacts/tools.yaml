@@ -140,3 +140,59 @@ tools:
           default: mean
           description: "mean=trung bình (mặc định); median=trung vị; stdev=độ lệch chuẩn mẫu (n-1), cần ít nhất 2 giá trị."
       required: [values]
+
+  - name: calc
+    description: "Tính chính xác MỘT biểu thức số học cụ thể mà người dùng đã đưa ra (cộng, trừ, nhân, chia, chia lấy phần nguyên, phần dư, lũy thừa, ngoặc), ví dụ (1250 + 380) * 12 / 4. Dùng khi cần ra con số chính xác từ một biểu thức. Không dùng cho bài toán lời văn, chia tiền nhiều bước, đại số, tích phân hay chứng minh (tự lập luận hoặc từ chối); không dùng cho danh sách số cần trung bình/trung vị (dùng stats) hay so sánh hai giá trị (dùng compare)."
+    parameters:
+      type: object
+      properties:
+        expression:
+          type: string
+          maxLength: 200
+          description: "Biểu thức chỉ gồm số, các phép + - * / // % ** (hoặc ^, ×, ÷) và dấu ngoặc. Không có chữ cái, hàm hay biến."
+      required: [expression]
+
+  - name: compare
+    description: "So sánh HAI số người dùng đã cho: chênh lệch, phần trăm thay đổi so với số đầu và số nào lớn hơn (ví dụ doanh thu tháng này 1200, tháng trước 1000, tăng bao nhiêu phần trăm). Không dùng cho danh sách nhiều số (stats) hay biểu thức tính toán (calc)."
+    parameters:
+      type: object
+      properties:
+        a:
+          type: number
+          description: "Giá trị gốc để so sánh (mốc cũ, kỳ trước). Phần trăm thay đổi tính theo giá trị này."
+        b:
+          type: number
+          description: "Giá trị mới cần so với a."
+        label_a:
+          type: string
+          default: "A"
+          description: "Tên ngắn của a, ví dụ 'Tháng trước'."
+        label_b:
+          type: string
+          default: "B"
+          description: "Tên ngắn của b, ví dụ 'Tháng này'."
+      required: [a, b]
+
+  - name: dedupe
+    description: "Loại các mục trùng trong một danh sách kết quả đã có (cùng URL hoặc cùng tiêu đề) trước khi trình bày bản tin. Chỉ làm sạch danh sách người dùng đưa hoặc kết quả tool trước đó; không tìm kiếm dữ liệu mới."
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          maxItems: 500
+          description: "Danh sách mục, mỗi mục là đối tượng có thể có title, url, source, summary."
+          items:
+            type: object
+            properties:
+              title: {type: string}
+              url: {type: string}
+              source: {type: string}
+              summary: {type: string}
+        key:
+          type: string
+          enum: [url, title]
+          default: url
+          description: "url=coi cùng địa chỉ là trùng (bỏ www, dấu / cuối, #, tham số utm_*); title=coi cùng tiêu đề là trùng (không phân biệt hoa thường, dấu). Mặc định url."
+      required: [items]
+

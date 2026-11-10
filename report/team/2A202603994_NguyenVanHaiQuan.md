@@ -25,6 +25,7 @@ Trưởng nhóm (GitHub `haiquanng`, nhật ký làm việc là `QuanNH`):
 - **Bot Telegram** (`telegram_bot.py`): chat riêng với bot, chỉ các chat nằm trong danh sách cho phép mới dùng được; có 10 test không cần mạng.
 - **Ô chọn version:** bản prompt và `tools.yaml` của từng version được đóng băng từ lịch sử git, có test so mã băm với `version_log.csv`.
 - **Rà soát chất lượng bằng chứng:** phát hiện nhiều run gắn nhãn "v3" nhưng khác mã băm, nên đề xuất ghi nhận chính thức là v4 và chạy lại bằng provider `openai` (base 20/20, group 10/10). Chạy `--suite group` cho v3 trên bộ câu hỏi ban đầu: 7/10.
+- **Bonus ≥ 4 tool mới:** thêm `calc`, `compare`, `dedupe` (cùng `stats` của Đức là 4 tool), mỗi tool có `TOOL.md`, đăng ký, test ba nhánh và tình huống eval riêng. Thêm tool làm group tụt 10/10 xuống 9/10 (G10), tôi ghi nhận trung thực (v5) rồi sửa bằng một dòng prompt (v6, group 10/10) mà không đổi tình huống của nhóm.
 - **Lỗi thật tìm được khi dùng thử:** agent gọi `send` thiếu `confirmed=true` rồi báo "đã gửi" sai; agent gọi `papers` với truy vấn rỗng (arXiv trả 400). Hai lỗi này được ghi trong `CHANGED_LOGS.md`.
 
 ## 4. Bằng chứng
@@ -40,5 +41,5 @@ Trưởng nhóm (GitHub `haiquanng`, nhật ký làm việc là `QuanNH`):
 ## 5. Tự đánh giá
 
 - **Làm tốt:** làm việc dựa trên bằng chứng (mỗi version có run, giả thuyết, mã băm); báo cáo trung thực cả khi version không tăng điểm (v2) và khi phát hiện nhãn version bị dùng sai; giao diện và bot dùng được để demo.
-- **Hạn chế:** chưa làm bonus Ollama (model local) và chưa đủ 4 tool mới (mới có `stats`); lỗi `papers` nhận truy vấn rỗng chưa được sửa ở mức tool và chưa có test hồi quy; bộ câu hỏi group đã được chỉnh câu chữ sau khi chạy v3 nên 10/10 của v4 cần đọc kèm ghi chú trong báo cáo nhóm.
+- **Hạn chế:** chưa làm bonus Ollama (model local); lỗi `papers` nhận truy vấn rỗng chưa được sửa ở mức tool và chưa có test hồi quy; bộ câu hỏi group đã được chỉnh câu chữ sau khi chạy v3 nên 10/10 của v4 cần đọc kèm ghi chú trong báo cáo nhóm.
 - **Bài học:** điểm cao trên bộ eval cố định không đồng nghĩa agent hiểu mọi cách diễn đạt (ví dụ "đăng" so với "đưa" lên Telegram); nên đo lại bằng nhiều cách nói và ghi rõ bộ đề nào đã đổi.

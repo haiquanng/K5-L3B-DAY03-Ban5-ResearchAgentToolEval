@@ -1,0 +1,520 @@
+{
+  "run_id": "v6_B_extension_openai_20261111T000048410205",
+  "version": "v6",
+  "artifact_version": "v6+p3812ed51fd54+t6ca4e53d9309",
+  "prompt_hash": "3812ed51fd54d3b9af6ead56ffca2105f7106ab3311ad6acfe5fd3330242487f",
+  "tools_hash": "6ca4e53d930929f1d92945af73a8cc6cfc5341c3767d32e3fe02aef9776fbefa",
+  "phase": "B",
+  "suite": "extension",
+  "provider": "openai",
+  "model": "gpt-4o-mini",
+  "system_prompt": "artifacts/versions/v6/system_prompt.md",
+  "tools": "artifacts/versions/v6/tools.yaml",
+  "eval_cases": "data/eval_bonus_tools.json",
+  "dataset_id": "day03_v5_bonus_tools",
+  "dataset_role": "extension",
+  "description": "Case nhóm Ban5 cho 3 tool mới của bonus (calc, compare, dedupe). File riêng để eval_group.json giữ đúng 10 case.",
+  "generated_at": "2026-11-11T00:00:48",
+  "summary": {
+    "total_cases": 7,
+    "measured_cases": 7,
+    "provider_error_cases": 0,
+    "passed_cases": 7,
+    "case_accuracy": 1.0,
+    "tool_routing_accuracy": 1.0,
+    "argument_accuracy": 1.0,
+    "multiturn_accuracy": 1.0,
+    "failure_counts": {},
+    "observed_mismatch_counts": {}
+  },
+  "results": [
+    {
+      "id": "B01_calc_expression",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "route_calc",
+        "difficulty": "easy",
+        "what_it_tests": "Một biểu thức số học cụ thể -> gọi calc để ra số chính xác, không tự nhẩm."
+      },
+      "input": "Tính giúp tôi (1250 + 380) * 12 / 4",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "calc",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "calc",
+            "args": {
+              "expression": "(1250 + 380) * 12 / 4"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "calc",
+          "args": {
+            "expression": "(1250 + 380) * 12 / 4"
+          },
+          "result": {
+            "tool": "calc",
+            "expression": "(1250 + 380) * 12 / 4",
+            "value": 4890.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "B02_calc_with_power",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "route_calc_power",
+        "difficulty": "medium",
+        "what_it_tests": "Biểu thức có lũy thừa dùng dấu ^ -> vẫn gọi calc."
+      },
+      "input": "Cho tôi kết quả của 17 * 23 + 2 ^ 10",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "calc",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "calc",
+            "args": {
+              "expression": "17 * 23 + 2 ** 10"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "calc",
+          "args": {
+            "expression": "17 * 23 + 2 ** 10"
+          },
+          "result": {
+            "tool": "calc",
+            "expression": "17 * 23 + 2 ** 10",
+            "value": 1415
+          }
+        }
+      ]
+    },
+    {
+      "id": "B03_multiturn_calc",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_calc",
+        "difficulty": "medium",
+        "what_it_tests": "Lượt đầu chưa có biểu thức, lượt sau có -> gọi calc cho biểu thức ở lượt cuối."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi cần tính nhanh một phép tính"
+        },
+        {
+          "role": "user",
+          "content": "Tính 365 * 24 - 1000"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "calc",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "calc",
+            "args": {
+              "expression": "365 * 24 - 1000"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "calc",
+          "args": {
+            "expression": "365 * 24 - 1000"
+          },
+          "result": {
+            "tool": "calc",
+            "expression": "365 * 24 - 1000",
+            "value": 7760
+          }
+        }
+      ]
+    },
+    {
+      "id": "B04_compare_percent",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "route_compare",
+        "difficulty": "medium",
+        "what_it_tests": "So sánh hai giá trị -> compare; a phải là mốc cũ (tháng trước = 1000), b là giá trị mới (1200)."
+      },
+      "input": "Doanh thu tháng này là 1200, tháng trước là 1000. Tăng bao nhiêu phần trăm?",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "compare",
+            "args": {
+              "a": 1000,
+              "b": 1200
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "compare",
+            "args": {
+              "a": 1000,
+              "b": 1200,
+              "label_a": "Tháng trước",
+              "label_b": "Tháng này"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "compare",
+          "args": {
+            "a": 1000,
+            "b": 1200,
+            "label_a": "Tháng trước",
+            "label_b": "Tháng này"
+          },
+          "result": {
+            "tool": "compare",
+            "a": 1000,
+            "b": 1200,
+            "difference": 200,
+            "percent_change": 20.0,
+            "ratio": 1.2,
+            "larger": "Tháng này"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B05_multiturn_compare",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_compare",
+        "difficulty": "medium",
+        "what_it_tests": "Hai giá trị nằm ở hai lượt -> gom lại và gọi compare."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Chi phí quý 1 của nhóm là 80"
+        },
+        {
+          "role": "user",
+          "content": "Quý 2 là 100, so sánh giúp tôi quý 2 hơn quý 1 bao nhiêu"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "compare",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "compare",
+            "args": {
+              "a": 80,
+              "b": 100,
+              "label_a": "Quý 1",
+              "label_b": "Quý 2"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "compare",
+          "args": {
+            "a": 80,
+            "b": 100,
+            "label_a": "Quý 1",
+            "label_b": "Quý 2"
+          },
+          "result": {
+            "tool": "compare",
+            "a": 80,
+            "b": 100,
+            "difference": 20,
+            "percent_change": 25.0,
+            "ratio": 1.25,
+            "larger": "Quý 2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B06_dedupe_urls",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "route_dedupe",
+        "difficulty": "medium",
+        "what_it_tests": "Danh sách có mục trùng URL cần làm sạch -> gọi dedupe, không tự lọc bằng tay."
+      },
+      "input": "Loại các bài trùng trong danh sách này: 1) 'AI mới ra mắt' https://a.com/x 2) 'AI mới ra mắt (bản 2)' https://www.a.com/x/ 3) 'Tin khác' https://b.com/y",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "dedupe",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "dedupe",
+            "args": {
+              "items": [
+                {
+                  "title": "AI mới ra mắt",
+                  "url": "https://a.com/x"
+                },
+                {
+                  "title": "AI mới ra mắt (bản 2)",
+                  "url": "https://www.a.com/x/"
+                },
+                {
+                  "title": "Tin khác",
+                  "url": "https://b.com/y"
+                }
+              ]
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "dedupe",
+          "args": {
+            "items": [
+              {
+                "title": "AI mới ra mắt",
+                "url": "https://a.com/x"
+              },
+              {
+                "title": "AI mới ra mắt (bản 2)",
+                "url": "https://www.a.com/x/"
+              },
+              {
+                "title": "Tin khác",
+                "url": "https://b.com/y"
+              }
+            ]
+          },
+          "result": {
+            "tool": "dedupe",
+            "key": "url",
+            "items": [
+              {
+                "title": "AI mới ra mắt",
+                "url": "https://a.com/x"
+              },
+              {
+                "title": "Tin khác",
+                "url": "https://b.com/y"
+              }
+            ],
+            "count": 2,
+            "removed": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "B07_multiturn_dedupe",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "extension",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_dedupe",
+        "difficulty": "medium",
+        "what_it_tests": "Danh sách ở lượt trước, yêu cầu lọc trùng ở lượt sau -> gọi dedupe."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi vừa tìm được ba bài: 'Mô hình A' https://x.com/a, 'Mô hình A' https://x.com/a?utm_source=tw, 'Mô hình B' https://x.com/b"
+        },
+        {
+          "role": "user",
+          "content": "Gom lại giúp tôi, bỏ các bài trùng nhau"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "dedupe",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "dedupe",
+            "args": {
+              "items": [
+                {
+                  "title": "Mô hình A",
+                  "url": "https://x.com/a"
+                },
+                {
+                  "title": "Mô hình A",
+                  "url": "https://x.com/a?utm_source=tw"
+                },
+                {
+                  "title": "Mô hình B",
+                  "url": "https://x.com/b"
+                }
+              ]
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "dedupe",
+          "args": {
+            "items": [
+              {
+                "title": "Mô hình A",
+                "url": "https://x.com/a"
+              },
+              {
+                "title": "Mô hình A",
+                "url": "https://x.com/a?utm_source=tw"
+              },
+              {
+                "title": "Mô hình B",
+                "url": "https://x.com/b"
+              }
+            ]
+          },
+          "result": {
+            "tool": "dedupe",
+            "key": "url",
+            "items": [
+              {
+                "title": "Mô hình A",
+                "url": "https://x.com/a"
+              },
+              {
+                "title": "Mô hình B",
+                "url": "https://x.com/b"
+              }
+            ],
+            "count": 2,
+            "removed": 1
+          }
+        }
+      ]
+    }
+  ]
+}
