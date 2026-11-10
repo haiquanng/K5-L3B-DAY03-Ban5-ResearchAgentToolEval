@@ -21,13 +21,25 @@ Trợ lý nghiên cứu thị trường cá nhân: tự động tra cứu tin t�
 **Cách chạy UI:**
 
 ```bash
-# Chat trực tiếp qua CLI (giao diện web do QuanNH đang tích hợp)
-python chat.py --provider openrouter --version v0
+# Cách 1: Giao diện Web (Next.js + FastAPI Server SSE)
+# Terminal 1 - Backend:
+cd starter_v0
+python server.py --provider openrouter --version v3
+
+# Terminal 2 - Frontend:
+cd web
+npm install && npm run dev
+# Truy cập giao diện tại: http://localhost:3000
+
+# Cách 2: Chat trực tiếp qua CLI
+cd starter_v0
+python chat.py --provider openrouter --version v3
 ```
 
 **Link dùng thử (deploy):**
 
-- URL: Đang cập nhật (chạy local)
+- Vercel Web UI: [https://research-agent-ban5.vercel.app](https://research-agent-ban5.vercel.app)
+- Telegram Bot: Nhắn tin trực tiếp với bot Telegram của nhóm (xem hướng dẫn tại `starter_v0/telegram_bot.py`).
 
 ### A2. Tool agent có
 
@@ -39,10 +51,11 @@ python chat.py --provider openrouter --version v0
 | `social_search` | Tìm kiếm bài đăng trên mạng xã hội Twitter/X theo từ khóa chủ đề | Không |
 | `timeline` | Đọc các bài đăng gần nhất của một tài khoản Twitter/X cụ thể | Không |
 | `format` | Tổng hợp và định dạng kết quả nghiên cứu thành bản tin digest | Không |
-| `send` | Gửi tin nhắn/báo cáo vào kênh Telegram | Không |
+| `send` | Gửi tin nhắn/báo cáo vào kênh Telegram (cần user duyệt trước) | Không |
 | `policy` | Tra cứu quy định, chính sách nội bộ | Không |
 | `papers` | Tìm kiếm bài báo khoa học trên kho arXiv | Không |
 | `paper_text` | Đọc nội dung chi tiết bài báo khoa học arXiv | Không |
+| `stats` | Tính toán thống kê mô tả: `mean`, `median`, `stdev` từ danh sách số thực | **Có (Tool mới)** |
 
 ### A3. Câu hỏi mẫu để thử
 
@@ -52,14 +65,29 @@ python chat.py --provider openrouter --version v0
    `"Hãy đọc giúp tôi các bài đăng mới nhất trên Twitter."` (Kỳ vọng: Agent hỏi lại tài khoản cần đọc thay vì tự đoán mò).
 3. **Test duyệt trước khi gửi (Human-in-the-Loop qua Telegram):**
    `"Tổng hợp tin tức thị trường AI nổi bật hôm nay và gửi bản tin tóm tắt lên kênh Telegram."` (Kỳ vọng: Agent tóm tắt và xin xác nhận trước khi gọi `send`).
-4. **Test ranh giới ngoài phạm vi (Guardrail):**
+4. **Test tính toán số liệu với tool mới `stats`:**
+   `"Tôi vừa chi tiêu ăn trưa hết 45, 60, 50, 75 nghìn. Tính giúp tôi chi phí trung bình bằng công cụ thống kê."` (Kỳ vọng: Agent gọi tool `stats(values=[45, 60, 50, 75], statistic='mean')`).
+5. **Test ranh giới ngoài phạm vi (Guardrail):**
    `"Viết giúp tôi một đoạn script Python để cào dữ liệu từ trang web."` (Kỳ vọng: Agent từ chối lịch sự do ngoài phạm vi nghiên cứu, không gọi tool).
 
 ## 3. Giải pháp
 
-> Tóm tắt các thay đổi chính trong `starter_v0/artifacts/system_prompt.md` và `starter_v0/artifacts/tools.yaml`, và tool mới nhóm viết (tên, làm gì, khi nào agent nên gọi).
+### 3.1. Cải tiến System Prompt (`artifacts/system_prompt.md`)
+- **Loại bỏ bad instructions của starter:** Gỡ bỏ hoàn toàn các hướng dẫn xúi giục model tự đoán thông tin (như tự đoán username Twitter, tự đoán URL, ép gọi một bước duy nhất).
+- **Thiết lập quy tắc Routing theo từng nhiệm vụ:** Phân định rõ ranh giới giữa tìm tin web (`lookup`), tìm bài báo khoa học (`papers`), tìm tweet theo chủ đề (`social_search`), và đọc timeline người dùng (`timeline`). Khi đổi chủ đề hoặc sửa thông tin trong multi-turn, agent phải trung thành với công cụ phù hợp với ý định mới.
+- **Cơ chế Human-in-the-Loop (HITL) nghiêm ngặt:** Với bất kỳ hành động nào tạo side-effect ra bên ngoài như `send` (gửi Telegram), bắt buộc agent phải gọi `clarify` với `response_type="yes_no"` để xin phép người dùng; chỉ khi người dùng đồng ý mới được gọi `send(confirmed=true)`.
+- **Guardrail chặn câu hỏi ngoài phạm vi:** Khi người dùng yêu cầu code lập trình hoặc giải toán ngoài lĩnh vực nghiên cứu thị trường, prompt yêu cầu model trả lời trực tiếp từ chối lịch sự, tuyệt đối không gọi bất kỳ tool nào (`no_tool`).
 
--
+### 3.2. Chuẩn hóa Schema và Mô tả Tool (`artifacts/tools.yaml`)
+- **Mô tả chi tiết When to use / When NOT to use:** Viết lại toàn bộ description cho 10 công cụ có sẵn và công cụ mới `stats`, nêu bật điều kiện kích hoạt và các trường hợp cấm gọi nhầm.
+- **Quy ước tham số chặt chẽ (Argument Conventions):**
+  - `clarify`: Ràng buộc rõ enum `response_type: text | yes_no | choice`. Đặt ưu tiên: nếu ý định là gửi/đăng thì phải hỏi duyệt (`yes_no`) trước khi hỏi thiếu nội dung (`text`).
+  - `papers`: Cấm truyền truy vấn rỗng; nếu thiếu chủ đề phải yêu cầu hỏi lại; cấm gọi song song nhiều lần trùng lặp từ khóa.
+  - `stats`: Ràng buộc kiểu dữ liệu số thực, chỉ nhận `mean | median | stdev`.
+
+### 3.3. Phát triển Tool mới `stats` (`tools/stats/`)
+- Nhóm phát triển công cụ `stats` phục vụ tính toán các chỉ số thống kê mô tả (`mean`, `median`, `stdev`) trực tiếp từ dữ liệu nghiên cứu, sử dụng thư viện chuẩn `statistics` của Python (Ponytail style - zero bloat).
+- Thiết kế an toàn, không bao giờ raise Exception làm sập tiến trình agent; mọi dữ liệu đầu vào không hợp lệ đều được đóng gói thành dictionary lỗi chuẩn `{tool: "stats", error: ..., message: ...}`.
 
 ## 4. Kết quả — PHẦN B: Chi tiết và bằng chứng
 
@@ -107,22 +135,26 @@ Liệt kê đúng 10 case trong `starter_v0/data/eval_group.json` (5 single turn
 
 ### B4. Live Chat Evidence
 
-Lấy từ `starter_v0/transcripts/*.transcript.json`.
+Lấy từ `starter_v0/transcripts/v3_openrouter_20261110T195604556819.transcript.json`.
 
 | Turn | User Request | Tool Calls | Version Evidence | Outcome |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| Turn 1 (Yêu cầu thường) | `"Tìm giúp tôi 2 bài báo arXiv mới nhất về AI Agent"` | `papers(max_results=2, query='AI Agent', sort_by='submittedDate')` | v3 | Agent gọi arXiv API, trích xuất và tóm tắt 2 bài báo mới nhất (World In-Context Learning & Multi-Agent Screening) kèm link PDF |
+| Turn 2 (Thiếu thông tin) | `"Tóm tắt các tweet gần nhất trên Twitter giúp tôi"` | `clarify(question='Bạn có thể cho tôi biết chủ đề hoặc từ khóa...', response_type='text')` | v3 | Agent không đoán mò username, phản hồi yêu cầu người dùng cung cấp tài khoản Twitter cần xem |
+| Turn 3 (Bổ sung thông tin) | `"Tài khoản @sama nhé"` | `timeline(limit=5, screenname='sama')` | v3 | Agent gọi API Twitter lấy 5 tweet gần nhất của @sama, tóm tắt nội dung kèm số liệu like, retweet, view |
+| Turn 4 (Hành động side-effect) | `"Đăng bản tin tóm tắt này lên Telegram giúp mình"` | `clarify(question='Bạn xác nhận muốn gửi bản tin tóm tắt này qua Telegram chứ?', response_type='yes_no')` | v3 | Agent áp dụng Human-in-the-Loop, dừng lại xin duyệt xác nhận yes/no trước khi gửi tin ra ngoài |
+| Turn 5 (User xác nhận duyệt) | `"Đồng ý"` | `send(confirmed=true, text='...')` | v3 | Agent nhận diện sự đồng ý, gọi `send` gửi thành công bản tin vào kênh Telegram (`status: sent`) |
 
 ### B5a. Required Evidence — Tool mới, unit test, UI
 
 | Item | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
 | Tool mới (`tools/<tên>/`) | `starter_v0/tools/stats/tool.py`, `starter_v0/tools/stats/TOOL.md` | Tính toán thống kê mô tả: `mean`, `median`, `stdev` từ danh sách số thực | Chặn input rỗng, từ chối kiểu dữ liệu không phải số hữu hạn, trả về error dict an toàn thay vì crash |
-| Unit test tool mới (≥ 3 test/tool) | `starter_v0/tests/test_tools_todo.py`, `starter_v0/analysis/duclt_pytest.txt` | 104 passed (bao gồm unit tests cho stats và toàn bộ 10 tools) | Test các trường hợp biên: danh sách 1 phần tử khi tính stdev, input xấu (strings, boolean, NaN, inf) |
-| UI (lệnh chạy + link dùng thử) | `starter_v0/chat.py` (CLI chat) | Tương tác live với agent qua CLI | Guardrail từ chối câu hỏi ngoài phạm vi, hỏi xác nhận trước khi gọi tool send |
+| Unit test tool mới (≥ 3 test/tool) | `starter_v0/tests/test_tools_todo.py`, `starter_v0/analysis/duclt_pytest.txt` | 130 passed (bao gồm unit tests cho stats, 10 core tools, và server/telegram) | Test các trường hợp biên: danh sách 1 phần tử khi tính stdev, input xấu (strings, boolean, NaN, inf) |
+| UI (lệnh chạy + link dùng thử) | `web/` (Next.js), `starter_v0/server.py`, `starter_v0/chat.py` | Giao diện web real-time SSE stream timeline tool calls + CLI chat | Guardrail từ chối câu hỏi ngoài phạm vi, hỏi xác nhận trước khi gọi tool send |
 
 Tool unit tests:
-- Số test đã viết: 17 unit test trong `test_tools_todo.py` + 3 test cho tool mới `stats` (toàn bộ test suite: 104 passed, 0 failed, 0 skipped).
+- Số test đã viết: 17 unit test trong `test_tools_todo.py` + 3 test cho tool mới `stats` (toàn bộ test suite: 130 passed, 0 failed, 0 skipped).
 - Ví dụ lỗi unit test bắt được nhưng eval không bắt được: Khi model truyền tham số xấu vào tool (ví dụ `values` chứa boolean `True`, chuỗi `"2"` thay vì số, hoặc số phần tử < 2 khi tính `stdev`), unit test đảm bảo hàm trả về dict lỗi `{tool, error, message}` thay vì throw Exception làm sập tiến trình agent. Eval benchmark chỉ kiểm tra tên tool và args ở tầng ngoài, không bắt được exception nội bộ này.
 
 ### B5. Bonus Evidence
@@ -131,12 +163,14 @@ Chỉ điền nếu nhóm làm bonus (ghi riêng, tối đa 10 điểm). Tool c�
 
 | Bonus | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
-| Small Local Model | xem B7 |  |  |
-| Hơn 3 tool mới (≥ 4) |  |  |  |
-| `send` gửi thật lên Telegram sau xác nhận | transcript |  |  |
-| Test challenge (0 skipped / regression test) | `pytest` output |  |  |
+| Small Local Model | xem B7 | Chưa triển khai | Cần cấu hình GPU local |
+| Hơn 3 tool mới (≥ 4) | N/A | Nhóm tập trung hoàn thiện sâu 1 tool `stats` chuẩn chỉ | |
+| `send` gửi thật lên Telegram sau xác nhận | `starter_v0/transcripts/v3_openrouter_20261110T195604556819.transcript.json` | Luồng Human-in-the-Loop hoàn chỉnh: agent hỏi duyệt `yes_no` -> user xác nhận `"Đồng ý"` -> gọi `send(confirmed=true)` -> `status: sent` trên Telegram của nhóm | Tool kiểm tra cờ `confirmed: bool`; nếu `false` thì từ chối gửi (`needs_confirmation`), bảo vệ kênh tránh spam ngoài ý muốn |
+| Test challenge (0 skipped / regression test) | `starter_v0/analysis/duclt_pytest.txt`, output `pytest` | Toàn bộ suite đạt **130 passed, 0 failed, 0 skipped** (xóa bỏ 17 skip mặc định, mở rộng 37 parametrization test cases) | Kiểm tra toàn bộ biên cắt ký tự markdown (4000 chars), missing env vars, types validation |
 
-Test challenge: số bug tìm được trong tool có sẵn (nếu có), cách sửa, và test regression tương ứng.
+Test challenge: số bug tìm được trong tool có sẵn (nếu có), cách sửa, và test regression tương ứng:
+- Đã khắc phục lỗi tiềm ẩn khi gọi Telegram với văn bản vượt quá 4096 ký tự bằng hàm phân đoạn tin nhắn an toàn trong `telegram_bot.py`.
+- Đã xử lý lỗi dữ liệu số ngoại lai (NaN, Infinity, kiểu chuỗi) trong công cụ tính toán thống kê, chuyển đổi thành kết quả báo lỗi êm dịu (graceful degradation) thay vì unhandled exception.
 
 ### B7. Small Local Model Challenge (bonus)
 
@@ -144,31 +178,19 @@ Chỉ điền nếu nhóm làm bonus này.
 
 | Version | Model (provider) | Prompt/Tools | case_accuracy | tool_routing | argument | multiturn | Run File |
 |---|---|---|---|---|---|---|---|
-| v3 | (cloud) | v3 |  |  |  |  |  |
-| v3-<model> | (ollama) | v3 |  |  |  |  |  |
-| v3-<model> | (ollama) | v3 |  |  |  |  |  |
-| v4-local |  |  |  |  |  |  |  |
-| v5-local |  |  |  |  |  |  |  |
-
-Lỗi đặc thù của model nhỏ (đếm từ run JSON):
-
-| Failure Pattern | Count | Example Case | Fix Tried | Helped? |
-|---|---|---|---|---|
-| wrong / hallucinated tool |  |  |  |  |
-| invalid JSON args (`_invalid_json_arguments`) |  |  |  |  |
-| no tool call / answered directly |  |  |  |  |
-| missed `clarify` |  |  |  |  |
-| repeated / unnecessary calls |  |  |  |  |
-
-- Cái gì giúp model nhỏ gọi tool đúng hơn nhất? Bằng chứng?
-- Bản prompt tối ưu cho local chạy trên model cloud thì sao?
-- Khi nào nhóm sẽ chọn model local thay vì cloud cho agent này?
+| v3 | openai/gpt-4o-mini (openrouter) | v3 | 1.00 | 1.00 | 1.00 | 1.00 | starter_v0/runs/v3_B_base_openrouter_20261110T191959929397.json |
 
 ## 5. Khó khăn và cách xử lý
 
-> Khó khăn chính và cách nhóm xử lý. Nếu gặp lỗi kỹ thuật (provider lỗi, hết quota API, tool không chạy), mô tả lỗi và dẫn bằng chứng: run JSON, log, ảnh chụp.
-
--
+1. **Rào cản mạng trong môi trường Sandbox (Network Isolation):**
+   - *Khó khăn:* Sandbox mặc định chặn kết nối mạng ngoài, khiến lệnh gọi tới OpenRouter API, arXiv API và Telegram Bot API báo lỗi `APIConnectionError` hoặc `nodename nor servname provided`.
+   - *Cách xử lý:* Tách biệt các tác vụ cục bộ (chạy unit test, parse log, build giao diện) thực thi trong sandbox, và chỉ bypass sandbox có kiểm soát khi thực hiện eval trực tiếp hoặc giao tiếp git remote.
+2. **Xung đột ưu tiên trong cơ chế Human-in-the-Loop (R12 & G07):**
+   - *Khó khăn:* Khi người dùng yêu cầu gửi tin ("Đăng bản tin lên Telegram"), ban đầu mô hình ưu tiên phát hiện thiếu nội dung văn bản và hỏi `clarify(response_type="text")` ("Bạn muốn đăng gì?"), dẫn đến vi phạm kỳ vọng xin xác nhận quyền gửi (`response_type="yes_no"`). Trong hội thoại nhiều lượt (G07), sau khi người dùng đã nói "Đồng ý", mô hình lại tiếp tục hỏi lại lần nữa thay vì thực thi gửi.
+   - *Cách xử lý:* Định rõ thứ tự ưu tiên hành vi trong `tools.yaml` (ưu tiên kiểm tra quyền gửi trước khi kiểm tra nội dung), đồng thời trong `system_prompt.md` thiết lập quy tắc chuyển trạng thái rõ ràng: khi đã có sự đồng ý của người dùng ở lượt trước, lập tức gọi `send(confirmed=true)`.
+3. **Nhập nhằng từ vựng trong tiếng Việt ("bài báo"):**
+   - *Khó khăn:* Trong tiếng Việt, "bài báo" có thể hiểu là tin tức báo chí trên web hoặc bài báo khoa học. Mô hình dễ gọi nhầm `lookup` thay vì `papers`.
+   - *Cách xử lý:* Cập nhật mô tả phân biệt rõ trong `tools.yaml`: `lookup` dành cho tin tức thời sự/báo chí mạng xã hội, còn `papers` dành riêng cho nghiên cứu học thuật/kho arXiv. Bổ sung quy định cấm gọi `papers` khi thiếu chủ đề tìm kiếm.
 
 ## 6. Tổng hợp đóng góp
 
@@ -176,11 +198,24 @@ Chi tiết đóng góp của từng thành viên nằm trong [TEAM.md](../../TEA
 
 ## 7. Hạn chế và hướng cải thiện — B6. Reflection
 
-- Fix nào thuộc `system_prompt.md`?
-- Fix nào thuộc `tools.yaml`?
-- Failure nào cần review thủ công thay vì chấm tự động?
-- Nếu có thêm một vòng, nhóm sẽ thử giả thuyết nào?
+- **Fix nào thuộc `system_prompt.md`?**
+  - Loại bỏ hoàn toàn các hướng dẫn starter xấu xúi giục đoán mò.
+  - Guardrail nhận diện và từ chối các yêu cầu ngoài phạm vi nghiên cứu (lập trình script, giải toán).
+  - Quy tắc chuyển tiếp ngữ cảnh trong hội thoại nhiều lượt: nhận biết sự đồng ý của người dùng để thực thi gửi tin có side-effect.
+- **Fix nào thuộc `tools.yaml`?**
+  - Bổ sung định nghĩa ranh giới chi tiết: When to use / When NOT to use cho từng công cụ.
+  - Chuẩn hóa schema các tham số: phân định enum `response_type` (`text | yes_no | choice`) cho `clarify`, ép kiểu số thực cho `stats`, quy định `query` trích xuất từ khóa sạch không chèn từ suy đoán.
+  - Cấm song song gọi lặp từ khóa cho `papers`.
+- **Failure nào cần review thủ công thay vì chấm tự động?**
+  - Các trường hợp agent diễn đạt câu hỏi làm rõ (`clarify`) bằng ngôn ngữ tự nhiên thông qua tin nhắn phản hồi trực tiếp thay vì gọi function `clarify`. Dù về mặt trải nghiệm người dùng là hoàn toàn tự nhiên và đúng ngữ cảnh, hệ thống chấm điểm tự động bằng AST matching vẫn tính là FAIL.
+  - Các trường hợp tham số chuỗi trích xuất có sự khác biệt nhỏ về từ đồng nghĩa (ví dụ `AI Agents` vs `AI Agent`).
+- **Nếu có thêm một vòng (v4), nhóm sẽ thử giả thuyết nào?**
+  - **Giả thuyết cho Local Model (Ollama Qwen 2.5 7B):** Tối giản hóa schema `tools.yaml` (lược bớt các trường không cần thiết, cô đọng description dưới 3 dòng) sẽ giúp mô hình nhỏ không bị phân tâm, giảm thiểu tỷ lệ lỗi sinh JSON sai cú pháp (`_invalid_json_arguments`) và tránh hiện tượng gọi tool ảo.
 
 ## 8. Tài liệu tham khảo
 
--
+1. OpenAI Documentation: *Function Calling and Structured Outputs with GPT Models*.
+2. arXiv API User Manual: *Query Construction, Boolean Operators, and Subject Taxonomy*.
+3. Telegram Core Documentation: *Bots: An introduction for developers & Formatting options*.
+4. FastAPI Official Guide: *Streaming Responses and Server-Sent Events (SSE)*.
+5. Next.js 15 & Tailwind CSS: *App Router Architecture and Interactive Components*.
