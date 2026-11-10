@@ -10,7 +10,7 @@
 
 - Tên nhóm: Ban5
 - Thành viên và phân công: xem [TEAM.md](../../TEAM.md)
-- Provider/model dùng cho v0–v3: openrouter (openai/gpt-4o-mini)
+- Provider/model: các run v0–v4 trong `version_log.csv` chạy bằng provider `openai` (gpt-4o-mini). Một số run group trung gian và transcript live chạy bằng `openrouter` (openai/gpt-4o-mini), được ghi rõ ở từng mục.
 
 ## 2. Mục tiêu và cách tiếp cận — PHẦN A: Giới thiệu agent
 
@@ -24,7 +24,7 @@ Trợ lý nghiên cứu thị trường cá nhân: tự động tra cứu tin t�
 # Cách 1: Giao diện Web (Next.js + FastAPI Server SSE)
 # Terminal 1 - Backend:
 cd starter_v0
-python server.py --provider openrouter --version v3
+python server.py --provider openai --version v4
 
 # Terminal 2 - Frontend:
 cd web
@@ -33,12 +33,12 @@ npm install && npm run dev
 
 # Cách 2: Chat trực tiếp qua CLI
 cd starter_v0
-python chat.py --provider openrouter --version v3
+python chat.py --provider openai --version v4
 ```
 
 **Link dùng thử (deploy):**
 
-- Vercel Web UI: [https://research-agent-ban5.vercel.app](https://research-agent-ban5.vercel.app)
+- Không dùng link deploy: người chấm clone repo, thêm key vào `starter_v0/.env` (xem `.env.example`) rồi chạy theo lệnh ở trên (giao diện tại http://localhost:3000, có ô chọn version v0–v4).
 - Telegram Bot: Nhắn tin trực tiếp với bot Telegram của nhóm (xem hướng dẫn tại `starter_v0/telegram_bot.py`).
 
 ### A2. Tool agent có
@@ -101,6 +101,7 @@ Lấy từ `starter_v0/artifacts/version_log.csv` và `starter_v0/runs/*.json`. 
 | v1 | `system_prompt.md` | Bỏ chỉ dẫn đoán mò, thêm rule `clarify` khi thiếu info và xin duyệt trước khi `send` (R10, R11, R12 chuyển PASS) | case_accuracy=0.65; routing=0.70; args=0.65; multiturn=1.00 | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | starter_v0/runs/v1_B_base_openai_20261110T175732383834.json |
 | v2 | `system_prompt.md` | Thêm rule routing theo loại yêu cầu, giữ tool khi đổi chủ đề, từ chối ngoài phạm vi, dùng yes_no khi duyệt | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | starter_v0/runs/v2_B_base_openai_20261110T181054950591.json |
 | v3 | `tools.yaml` | Làm rõ description và quy ước tham số; `clarify` ưu tiên intent gửi/đăng trước thiếu nội dung | case_accuracy=0.90; routing=0.95; args=0.90; multiturn=0.83 | case_accuracy=1.00; routing=1.00; args=1.00; multiturn=1.00 | starter_v0/runs/v3_B_base_openai_20261110T183553607506.json |
+| v4 | `system_prompt.md`, `tools.yaml` | Thêm quy tắc arXiv: không dùng `lookup` cho bài báo; thiếu chủ đề nghiên cứu thì bắt buộc `clarify`; siết mô tả `papers`, `clarify`, `lookup`, `send` | case_accuracy=1.00 (base v3); group v3 (openai)=0.70 | case_accuracy=1.00; routing=1.00; args=1.00; multiturn=1.00 (base v4); group v4 (openai)=1.00 | `starter_v0/runs/v4_B_base_openai_20261110T234636702818.json` |
 
 ### B2. Failure Analysis
 
@@ -118,7 +119,9 @@ Lấy từ `results[*].result.failures` trong run JSON.
 
 ### B3. Team Eval Cases
 
-Liệt kê đúng 10 case trong `starter_v0/data/eval_group.json` (5 single turn + 5 multi turn). Run file: `starter_v0/runs/v3_B_group_openrouter_20261110T191237962030.json` (10/10 passed, accuracy=1.00, routing=1.00, multiturn=1.00).
+Liệt kê đúng 10 case trong `starter_v0/data/eval_group.json` (5 single turn + 5 multi turn). Run file: `starter_v0/runs/v4_B_group_openai_20261110T234654785402.json` (10/10 passed, accuracy=1.00, routing=1.00, multiturn=1.00).
+
+> Lưu ý trung thực: bản chạy v3 trên bộ câu hỏi ban đầu (`starter_v0/runs/v3_B_group_openai_20261110T191440431333.json`) đạt 7/10. Sau đó nhóm chỉnh prompt/tools (thành v4) và sửa lại câu chữ của một số case (G01, G02, G03, G07) trong commit `5cdeca5`; kết quả 10/10 là trên bộ case đã chỉnh. Các run group `v3_B_group_openrouter_*` là các lần chỉnh trung gian, gắn nhãn `v3` lúc chạy nhưng có mã băm khác v3 (xem `artifacts/version_log.csv`).
 
 | Case ID | What It Tests | Expected Tool/Behavior | Result |
 |---|---|---|---|
@@ -139,11 +142,11 @@ Lấy từ `starter_v0/transcripts/v3_openrouter_20261110T195604556819.transcrip
 
 | Turn | User Request | Tool Calls | Version Evidence | Outcome |
 |---|---|---|---|---|
-| Turn 1 (Yêu cầu thường) | `"Tìm giúp tôi 2 bài báo arXiv mới nhất về AI Agent"` | `papers(max_results=2, query='AI Agent', sort_by='submittedDate')` | v3 | Agent gọi arXiv API, trích xuất và tóm tắt 2 bài báo mới nhất (World In-Context Learning & Multi-Agent Screening) kèm link PDF |
-| Turn 2 (Thiếu thông tin) | `"Tóm tắt các tweet gần nhất trên Twitter giúp tôi"` | `clarify(question='Bạn có thể cho tôi biết chủ đề hoặc từ khóa...', response_type='text')` | v3 | Agent không đoán mò username, phản hồi yêu cầu người dùng cung cấp tài khoản Twitter cần xem |
-| Turn 3 (Bổ sung thông tin) | `"Tài khoản @sama nhé"` | `timeline(limit=5, screenname='sama')` | v3 | Agent gọi API Twitter lấy 5 tweet gần nhất của @sama, tóm tắt nội dung kèm số liệu like, retweet, view |
-| Turn 4 (Hành động side-effect) | `"Đăng bản tin tóm tắt này lên Telegram giúp mình"` | `clarify(question='Bạn xác nhận muốn gửi bản tin tóm tắt này qua Telegram chứ?', response_type='yes_no')` | v3 | Agent áp dụng Human-in-the-Loop, dừng lại xin duyệt xác nhận yes/no trước khi gửi tin ra ngoài |
-| Turn 5 (User xác nhận duyệt) | `"Đồng ý"` | `send(confirmed=true, text='...')` | v3 | Agent nhận diện sự đồng ý, gọi `send` gửi thành công bản tin vào kênh Telegram (`status: sent`) |
+| Turn 1 (Yêu cầu thường) | `"Tìm giúp tôi 2 bài báo arXiv mới nhất về AI Agent"` | `papers(max_results=2, query='AI Agent', sort_by='submittedDate')` | v4 (mã băm trùng v4; gắn nhãn v3 lúc chạy) | Agent gọi arXiv API, trích xuất và tóm tắt 2 bài báo mới nhất (World In-Context Learning & Multi-Agent Screening) kèm link PDF |
+| Turn 2 (Thiếu thông tin) | `"Tóm tắt các tweet gần nhất trên Twitter giúp tôi"` | `clarify(question='Bạn có thể cho tôi biết chủ đề hoặc từ khóa...', response_type='text')` | v4 (mã băm trùng v4; gắn nhãn v3 lúc chạy) | Agent không đoán mò username, phản hồi yêu cầu người dùng cung cấp tài khoản Twitter cần xem |
+| Turn 3 (Bổ sung thông tin) | `"Tài khoản @sama nhé"` | `timeline(limit=5, screenname='sama')` | v4 (mã băm trùng v4; gắn nhãn v3 lúc chạy) | Agent gọi API Twitter lấy 5 tweet gần nhất của @sama, tóm tắt nội dung kèm số liệu like, retweet, view |
+| Turn 4 (Hành động side-effect) | `"Đăng bản tin tóm tắt này lên Telegram giúp mình"` | `clarify(question='Bạn xác nhận muốn gửi bản tin tóm tắt này qua Telegram chứ?', response_type='yes_no')` | v4 (mã băm trùng v4; gắn nhãn v3 lúc chạy) | Agent áp dụng Human-in-the-Loop, dừng lại xin duyệt xác nhận yes/no trước khi gửi tin ra ngoài |
+| Turn 5 (User xác nhận duyệt) | `"Đồng ý"` | `send(confirmed=true, text='...')` | v4 (mã băm trùng v4; gắn nhãn v3 lúc chạy) | Agent nhận diện sự đồng ý, gọi `send` gửi thành công bản tin vào kênh Telegram (`status: sent`) |
 
 ### B5a. Required Evidence — Tool mới, unit test, UI
 

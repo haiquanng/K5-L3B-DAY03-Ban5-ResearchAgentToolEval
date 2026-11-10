@@ -100,6 +100,7 @@ VERSION_LABELS = {
     "v1": "Hỏi lại và xin xác nhận",
     "v2": "Rule chọn công cụ",
     "v3": "Mô tả công cụ rõ hơn",
+    "v4": "Rule arXiv: hỏi lại khi thiếu chủ đề",
 }
 
 

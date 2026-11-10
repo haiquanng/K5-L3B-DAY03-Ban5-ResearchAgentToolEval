@@ -212,6 +212,15 @@ Tên run JSON trong lệnh parse là file của lần đo cuối đã thực hi�
 - **Phát hiện kèm theo:** bản v3 xử lý đúng câu "Đăng bản tin này lên Telegram giúp mình" nhưng lệch với cách nói khác như "Đưa tin này lên Telegram giúp tôi" (agent hỏi bằng chữ thường, không dùng công cụ hỏi lại). Điểm 20/20 của v3 phụ thuộc vào câu chữ của từng tình huống.
 - **Việc tiếp theo:** đề xuất v4 liệt kê đủ các cách nói gửi/đăng/đưa và nêu nguyên văn nội dung khi xin xác nhận.
 
+### v4 — Quy tắc arXiv và mô tả công cụ chặt hơn (do Trung làm, đã ghi nhận chính thức)
+
+- **Vì sao có mục này:** prompt và `tools.yaml` hiện tại đã khác v3, nhưng nhiều run vẫn mang nhãn "v3". Nay xác nhận đó là **v4** và đã chạy lại cho sạch.
+- **Sửa gì:** thêm vào prompt quy tắc arXiv (không dùng tra cứu web cho bài báo; thiếu chủ đề thì phải hỏi lại) và siết mô tả các công cụ `papers`, `clarify`, `lookup`, `send` trong `tools.yaml`.
+- **Chạy lại bằng provider `openai`, model `gpt-4o-mini`, tắt Telegram:** base 20/20 và group 10/10, cả hai hợp lệ (0 lỗi nhà cung cấp, đo đủ số case).
+- **Trung thực:** group v3 trên bộ câu hỏi ban đầu đạt 7/10. Bộ câu hỏi group sau đó được chỉnh câu chữ (G01, G02, G03, G07), nên 10/10 của v4 là trên bộ đã chỉnh. Các run group openrouter là lần chỉnh trung gian, mang nhãn v3 nhưng khác mã băm.
+- **Bằng chứng:** `runs/v4_B_base_openai_20261110T234636702818.json`, `runs/v4_B_group_openai_20261110T234654785402.json`; bản đóng băng ở `artifacts/versions/v4/`.
+- **Ghi chú:** một khóa OpenAI cũ trả lỗi 401 trong lúc chạy; nhóm tạo khóa mới rồi chạy lại.
+
 ## Việc khác đã làm
 
 - **Phân việc nhóm:** thư mục `tasks/` có bảng vai trò và checklist cho từng người.
