@@ -159,6 +159,59 @@ Tên run JSON trong lệnh parse là file của lần đo cuối đã thực hi�
   - Chọn sai công cụ hoặc thiếu công cụ (R03, R13).
 - Bảng chi tiết nằm trong `report/team/group_report.md` (mục B2).
 
+## Giao diện
+
+### Giao diện web và server cho agent
+
+- **Thêm:** thư mục `web/` (Next.js, React, shadcn/ui) và `starter_v0/server.py` (FastAPI).
+- **Vì sao:** đề bài yêu cầu giao diện chạy được và chat thử ít nhất 3 lượt có lưu transcript.
+- **Làm được gì:**
+  - Chat với agent thật, thấy từng công cụ được gọi (tên, tham số, kết quả, thời gian) ngay khi nó chạy.
+  - Khi agent hỏi lại thì hiện câu hỏi; khi cần xác nhận trước khi gửi thì hiện hộp Đồng ý / Không.
+  - Lưu transcript mỗi phiên, cùng định dạng với `chat.py`; che khóa bí mật trước khi ghi. Có nút tải transcript.
+  - Lưu lịch sử chat trong trình duyệt, có chế độ sáng/tối, dùng được trên điện thoại.
+- **Cách chạy:** xem `web/README.md`.
+- **Kiểm tra đã làm:** build và lint sạch; gọi thử qua proxy thấy kết quả về từng bước (không phải chờ đến cuối). Chưa chat thử ba lượt đầy đủ trên giao diện.
+- **Việc tiếp theo:** chat thử ba lượt (yêu cầu thường, thiếu thông tin rồi bổ sung, yêu cầu gửi) và lưu transcript làm bằng chứng.
+
+### Chat với agent ngay trên Telegram
+
+- **Thêm:** `starter_v0/telegram_bot.py` và `starter_v0/tests/test_telegram_bot.py`.
+- **Vì sao:** trước đó bot Telegram chỉ gửi tin đi (công cụ `send` đăng lên kênh), chưa nghe và trả lời tin nhắn của người dùng.
+- **Làm được gì:** nhắn riêng cho bot thì agent chọn công cụ, chạy thật và trả lời lại. Khi cần xác nhận thì hiện nút Đồng ý / Không; khi hỏi chọn thì hiện nút lựa chọn. Mỗi cuộc chat lưu transcript như trên web.
+- **An toàn:** chỉ các chat nằm trong `TELEGRAM_ALLOWED_CHAT_IDS` mới dùng được, để người lạ không tiêu tốn tiền API. Tin trong kênh và nhóm bị bỏ qua. Khóa bí mật bị che khỏi log và transcript.
+- **Kiểm tra đã làm:** 10 bài test mới chạy không cần mạng (toàn bộ test là 118 đạt). Chạy thử logic với mô hình thật và Telegram giả: agent hỏi xác nhận bằng nút, sau khi bấm đồng ý thì gọi `send`. Chưa chạy với Telegram thật.
+- **Cách chạy:** `python telegram_bot.py --provider openai --version v3` (xem `.env.example`).
+
+### Đưa giao diện lên Vercel
+
+- **Làm gì:** deploy thư mục `web/` lên Vercel, link dùng thử: https://research-agent-ban5.vercel.app
+- **Cách hoạt động:** trang trên Vercel chỉ là giao diện; mọi lời gọi `/api/*` được chuyển về backend `server.py` chạy trên máy của nhóm qua tunnel Cloudflare (biến `API_ORIGIN` trên Vercel).
+- **Điều kiện để dùng được:** máy nhóm phải đang chạy `python server.py` và `cloudflared tunnel --url http://localhost:8000`. Địa chỉ tunnel đổi mỗi lần chạy lại nên cần cập nhật `API_ORIGIN` và deploy lại.
+- **Kiểm tra đã làm:** trang chủ, `/api/health`, `/api/tools` và một lượt chat có gọi tool đều chạy qua link Vercel.
+
+### Chọn version của agent ngay trên giao diện
+
+- **Thêm:** ô chọn version (v0, v1, v2, v3) ở đầu trang chat; mỗi cuộc chat chạy đúng prompt và mô tả công cụ của version đã chọn.
+- **Không cần quay lại code cũ:** bản prompt và `tools.yaml` của từng version được chép nguyên văn từ lịch sử git vào `starter_v0/artifacts/versions/vN/`. Mã băm của từng file khớp với `version_log.csv` (có test kiểm tra). File `artifacts/system_prompt.md` và `tools.yaml` ở ngoài vẫn là bản đang sửa tiếp cho v4.
+- **Cách hoạt động:** server có thêm `/api/versions`; giao diện gửi version khi mở chat mới. Đổi version giữa chừng sẽ mở một chat mới, để mỗi transcript chỉ thuộc về một version. Danh sách công cụ bên trái cũng đổi theo version (v0 chưa có `stats`).
+- **Ví dụ thật cùng một câu hỏi ("Tóm tắt 5 tweet mới nhất giúp mình"):** v0 tự đoán tài khoản `sama` rồi gọi `timeline`; v3 hỏi lại bạn muốn tài khoản nào. Rất hợp để minh hoạ vòng lặp cải tiến khi demo.
+- **Kiểm tra đã làm:** 130 test đạt (thêm 12 test cho phần version), lint và build giao diện sạch.
+- **Khi làm v4:** chép `system_prompt.md` và `tools.yaml` hiện tại vào `artifacts/versions/v4/` sau khi chạy eval và ghi `version_log.csv`; ô chọn sẽ tự hiện thêm v4.
+
+### Chạy 10 tình huống của nhóm (eval group) trên v3
+
+- **Chạy:** `run_eval.py --version v3 --suite group` với `data/eval_group.json`, model `gpt-4o-mini`. Run hợp lệ: 10/10 tình huống được đo, không có lỗi từ nhà cung cấp mô hình.
+- **Kết quả:** đạt 7/10 (chọn đúng công cụ 0.70, điền đúng tham số 0.70, hội thoại nhiều lượt 0.80).
+- **Ba tình huống sai:**
+  - G01 (thiếu chủ đề arXiv): agent gọi tìm bài báo với truy vấn rỗng thay vì hỏi lại.
+  - G03 (tìm bài arXiv): agent tìm hai lần ("AI Agents" và "build AI Agents") trong khi kỳ vọng một lần.
+  - G07 (đã đồng ý rồi gửi): agent hỏi xác nhận thêm lần nữa thay vì gửi.
+- **Cách chạy an toàn:** tắt biến Telegram khi chạy để tình huống G07 không thể đăng thật lên kênh của nhóm (eval chạy công cụ thật).
+- **Bằng chứng:** `starter_v0/runs/v3_B_group_openai_20261110T191440431333.json`, `starter_v0/analysis/v3_group.csv`.
+- **Phát hiện kèm theo:** bản v3 xử lý đúng câu "Đăng bản tin này lên Telegram giúp mình" nhưng lệch với cách nói khác như "Đưa tin này lên Telegram giúp tôi" (agent hỏi bằng chữ thường, không dùng công cụ hỏi lại). Điểm 20/20 của v3 phụ thuộc vào câu chữ của từng tình huống.
+- **Việc tiếp theo:** đề xuất v4 liệt kê đủ các cách nói gửi/đăng/đưa và nêu nguyên văn nội dung khi xin xác nhận.
+
 ## Việc khác đã làm
 
 - **Phân việc nhóm:** thư mục `tasks/` có bảng vai trò và checklist cho từng người.
