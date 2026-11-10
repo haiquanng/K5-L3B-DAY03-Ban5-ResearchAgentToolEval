@@ -52,20 +52,22 @@
 - Hoàn thành Phần A (A1, A2, A3), phân tích lỗi v0 (Bảng B2), cập nhật B1: commit `c35c322`
 - Merge tích hợp tool mới `stats` và test offline từ nhánh `origin/feat/DucLT-tool-tests`: commit `b788f27` (chạy pytest 104 passed)
 - Xây dựng 10 test case nhóm trong `starter_v0/data/eval_group.json`, cập nhật Bảng B3, B5a: commit `0cdeb72`
-- Chạy benchmark bộ eval nhóm đạt 10/10 PASS (100%): run JSON `v3_B_group_openrouter_20261110T191237962030.json`, commit `5cdeca5`
-- Chạy kiểm tra hồi quy 20 case Base Eval đạt 20/20 PASS (100%): run JSON `v3_B_base_openrouter_20261110T191959929397.json`, commit `a8361ba`
-- Cập nhật đầy đủ TEAM.md và báo cáo cá nhân `report/team/2A202604013_NguyenBaoTrung.md`
+- *Bổ sung phiên tối ưu:* Chạy benchmark bộ eval nhóm đạt 10/10 PASS (100%): run JSON `v3_B_group_openrouter_20261110T191237962030.json`, commit `5cdeca5`
+- *Bổ sung phiên tối ưu:* Chạy kiểm tra hồi quy 20 case Base Eval đạt 20/20 PASS (100%): run JSON `v3_B_base_openrouter_20261110T191959929397.json`, commit `a8361ba`
+- Cập nhật đầy đủ `TEAM.md` và báo cáo cá nhân `report/team/2A202604013_NguyenBaoTrung.md`
 
 ## Vướng mắc / cần lead hỗ trợ
-- Không còn vướng mắc kỹ thuật. Toàn bộ 20 case base và 10 case nhóm đều đạt 100%.
+- Không còn vướng mắc kỹ thuật.
 
 ## Ghi chú kỹ thuật (giả thuyết, quyết định, vì sao sửa như vậy)
 - Áp dụng cơ chế Human-in-the-Loop (HITL) cho tool `send` và chặn gọi tool khi thiếu tham số bắt buộc (gọi `clarify`).
 - Bổ sung Guardrail từ chối các yêu cầu ngoài phạm vi nghiên cứu (như code bài toán) với kỳ vọng `no_tool: true`.
 - Tích hợp tool `stats` của DucLT để kiểm tra khả năng trích xuất danh sách số liệu và tính trung bình cộng.
-- Khắc phục lỗi thiếu chủ đề arXiv bằng cách chặn gọi `papers(query='')` và `lookup`, ép gọi `clarify(response_type='text')`.
-- Chặn gọi lặp duplicate tool bằng ràng buộc gộp query trong `tools.yaml`.
-- Kích hoạt gọi `send(confirmed=true)` khi người dùng đã duyệt rõ ràng ở turn sau.
+- *Ghi chú bổ sung phiên tối ưu:*
+  - Khắc phục lỗi thiếu chủ đề arXiv bằng cách chặn gọi `papers(query='')` và `lookup`, ép gọi `clarify(response_type='text')`.
+  - Chặn gọi lặp duplicate tool bằng ràng buộc gộp query trong `tools.yaml`.
+  - Kích hoạt gọi `send(confirmed=true)` khi người dùng đã duyệt rõ ràng ở turn sau.
 
 ## Công cụ AI đã dùng (để ghi vào báo cáo cá nhân)
-- Google Antigravity Agent (Gemini 3.8 Flash High): Trợ lý lập trình cặp (pair programming) theo phương thức tương tác hỏi - đáp từng bước, hỗ trợ phân tích log lỗi thất bại v0, rà soát cú pháp schema eval cases, chẩn đoán merge conflict git, đối chiếu các tiêu chí trong rubric, mổ xẻ nguyên nhân case R12 và các case lỗi G01, G03, G07 trong eval nhóm, đồng thời hỗ trợ kiểm tra hồi quy toàn diện. Toàn bộ logic nghiệp vụ, kịch bản test case và quyết định kỹ thuật do sinh viên trực tiếp định hướng và quyết định.
+- Google Antigravity Agent (Gemini 3.8 Flash High): Trợ lý lập trình cặp (pair programming) theo phương thức tương tác hỏi - đáp từng bước, hỗ trợ phân tích log lỗi thất bại v0, rà soát cú pháp schema eval cases, chẩn đoán merge conflict git và đối chiếu các tiêu chí trong rubric. Toàn bộ logic nghiệp vụ và kịch bản test case do sinh viên trực tiếp quyết định.
+- *Bổ sung phiên làm việc:* Hỗ trợ phân tích log run JSON 3 case lỗi eval nhóm (`G01`, `G03`, `G07`), mổ xẻ nguyên nhân case R12 và hỗ trợ kiểm tra hồi quy 20 case Base Eval trên OpenRouter. Toàn bộ định hướng kỹ thuật và giải pháp do sinh viên đưa ra.
