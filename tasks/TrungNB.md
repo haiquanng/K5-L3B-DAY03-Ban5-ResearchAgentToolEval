@@ -38,10 +38,10 @@
 - [x] Điền `TEAM.md` (thông tin nhóm, thành viên, vai trò)
 - [x] Viết `report/team/group_report.md`: Phần A trước 16:30, Phần B để nộp
 - [ ] Tạo bot Telegram (BotFather → `/newbot` → private channel → thêm bot làm admin → lấy chat id), token chỉ để trong `.env`
-- [ ] Test `send` thật sau khi user xác nhận (chỉ gửi vào private channel của nhóm)
-- [ ] Chat live ≥ 3 lượt trên UI, lưu transcript
+- [x] Test `send` thật sau khi user xác nhận (chỉ gửi vào private channel của nhóm)
+- [x] Chat live ≥ 3 lượt trên UI, lưu transcript
 - [x] Có ít nhất 1 commit kỹ thuật trong lịch sử nhánh nộp
-- [ ] Nộp link repo trên LMS bằng tài khoản cá nhân trước 23h59
+- [x] Nộp link repo trên LMS bằng tài khoản cá nhân trước 23h59
 - [x] Báo cáo cá nhân `report/team/MSSV_HoTen.md`
 
 ## Việc đang làm
