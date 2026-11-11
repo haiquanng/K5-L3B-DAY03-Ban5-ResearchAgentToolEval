@@ -21,9 +21,14 @@ Trợ lý nghiên cứu thị trường cá nhân: tự động tra cứu tin t�
 **Cách chạy UI:**
 
 ```bash
-# Cách 1: Giao diện Web (Next.js + FastAPI Server SSE)
-# Terminal 1 - Backend:
+# Chuẩn bị (một lần): cần Python 3.10+ và Node.js 18+
 cd starter_v0
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt          # gồm fastapi, uvicorn
+cp .env.example .env                     # điền OPENAI_API_KEY, TAVILY_API_KEY, FIRECRAWL_API_KEY, RAPIDAPI_KEY
+
+# Cách 1: Giao diện Web (Next.js + FastAPI Server SSE)
+# Terminal 1 - Backend (từ starter_v0/, đã bật venv):
 python server.py --provider openai --version v6
 
 # Terminal 2 - Frontend:
@@ -31,8 +36,7 @@ cd web
 npm install && npm run dev
 # Truy cập giao diện tại: http://localhost:3000
 
-# Cách 2: Chat trực tiếp qua CLI
-cd starter_v0
+# Cách 2: Chat trực tiếp qua CLI (từ starter_v0/, đã bật venv)
 python chat.py --provider openai --version v6
 ```
 
