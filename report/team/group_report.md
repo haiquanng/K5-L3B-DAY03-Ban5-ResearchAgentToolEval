@@ -31,7 +31,7 @@ cp .env.example .env                     # điền OPENAI_API_KEY, TAVILY_API_KE
 # Terminal 1 - Backend (từ starter_v0/, đã bật venv):
 python server.py --provider openai --version v6
 
-# Terminal 2 - Frontend:
+# Terminal 2 - Frontend (mở terminal mới, đứng ở thư mục gốc của repo):
 cd web
 npm install && npm run dev
 # Truy cập giao diện tại: http://localhost:3000
