@@ -1,6 +1,6 @@
 ---
 name: stats
-track: core
+track: bonus
 kind: local_formatter
 requires_env: []
 inputs: [values, statistic]
